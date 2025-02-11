@@ -3,13 +3,13 @@
   <img src="https://www.sbmarketingtools.com/wp-content/uploads/2020/02/How-to-Open-Restaurant.jpg" width="700">
 </p>
 
-# <h1 align="center">CoDriver</h1>
+# <h1 align="center">CoDriver 🚗</h1>
 
-## Summary
+## Summary ✨
 
 Long road trips often cause significant fatigue for drivers, making it unsafe for them and other drivers. That’s where CoDriver steps in! It's a mobile app with a conversational AI assistant that feels like having a co-pilot in your passenger seat. Designed to keep you safe, focused, and engaged, CoDriver monitors your behavior and provides real-time feedback to keep you focused while on the road. It also keeps you entertained with engaging conversations and helpful information about your route, making every drive more enjoyable.
 
-## MVP
+## MVP 💡
 
 - User account creation with authentication
 - Conversational AI Assistant  
@@ -26,7 +26,7 @@ Long road trips often cause significant fatigue for drivers, making it unsafe fo
   - Using the front camera to look at drivers’ eyes to determine if they are focused  
   - If they are not focused, prompt the AI to create a conversation to make the driver focused
 
-## Stretch Goals
+## Stretch Goals 🎯
 
 - Feedback based on driver expression
 - Personalized interactions
@@ -35,7 +35,7 @@ Long road trips often cause significant fatigue for drivers, making it unsafe fo
 - Automatic emergency support by voice
 - Gamification to promote focused driving
 
-## Milestones
+## Milestones 🗓️
 
 <details>
   <summary>Week 1</summary>
@@ -136,7 +136,7 @@ Start to focus on connecting the backend to frontend as a team
 - Make sure the Slides and Demo are ready and good to go
 </details>
 
-## Tech Stack
+## Tech Stack 🛠️
 
 #### React Native
 - <a href="https://reactnative.dev/docs/tutorial?language=javascript">Learn the Basics</a>
@@ -145,47 +145,42 @@ Start to focus on connecting the backend to frontend as a team
 - <a href="https://www.youtube.com/watch?v=mrjy92pW0kM">React Native #1: Setup Visual Studio Code</a>
 - <a href="https://www.youtube.com/watch?v=6ZnfsJ6mM5c">React Native Tutorial for Beginners - Getting Started</a>
 - Getting the User’s location:
-  - <a href="https://www.youtube.com/watch?v=d7G0E_9FwyE">Get Current Location,  Geocode and Reverse Geocode in Expo React Native Apps using expo-location</a>
-- QR code
+  - <a href="https://www.youtube.com/watch?v=d7G0E_9FwyE">Get Current Location, Geocode and Reverse Geocode in Expo React Native Apps using expo-location</a>
+- QR code:
   - <a href="https://www.youtube.com/watch?v=ZAjrx36WJxU">Working with QR Codes and React-Native with Typescript [2022]</a>
 
 #### Android Studio
-- <a href="https://www.youtube.com/watch?v=DM783YA0vbc">How to install Android Studio on Windows 10/11 [ 2023 Update ] Flamingo Installation</a>
+- <a href="https://www.youtube.com/watch?v=DM783YA0vbc">How to install Android Studio on Windows 10/11 [2023 Update] Flamingo Installation</a>
 - <a href="https://www.youtube.com/watch?v=ri90tcQL-Aw">How to Install Android Studio on Mac</a>
-
 
 #### MERN Stack
 - This works really well with React Native and with MongoDB it can handle any form of data without any issue
-- MERN Stack Playlist. It goes over how to create user authentication. Hence, I suggest looking at that portion
+- MERN Stack Playlist. It goes over how to create user authentication. Hence, I suggest looking at that portion:
   - <a href="https://www.youtube.com/watch?v=P5QbE9aRCLQ&list=PLaAoUJDWH9WrPXMOkqHHsPHxbhvRDqryM">How to Start WIth Node & Express From Zero - Node Authentication API Part-1</a>
 - MongoDB Playlist:
   - <a href="https://www.youtube.com/watch?v=ExcRbA7fy_A&list=PL4cUxeGkcC9h77dJ-QJlwGlZlTd4ecZOA">Complete MongoDB Tutorial #1 - What is MongoDB?</a>
 
-
 #### APIs
 - <a href="https://www.youtube.com/watch?v=KJhg761xb3c">Fetching Data from An API in React Native</a>
 - <a href="https://rapidapi.com/search/restaurants/">Searching for APIs</a>
-- Suggestions
+- Suggestions:
   - <a href="https://tripadvisor-content-api.readme.io/reference/searchfornearbylocations">Tripadvisor API</a>
   - From Rapid API: <a href="https://rapidapi.com/ptwebsolution/api/restaurants222/">Restaurant API</a>
 - <a href="https://www.youtube.com/watch?v=fgTGADljAeg">Build A REST API With Node.js, Express, & MongoDB - Quick</a>
 
-
 #### LLM
 - 5 min vid: <a href="https://www.youtube.com/watch?v=5sLYAQS9sWQ">How Large Language Models Work</a>
-- Chatbot Fine Tuning
+- Chatbot Fine Tuning:
   - <a href="https://www.youtube.com/watch?v=eC6Hd1hFvos">Fine-tuning Large Language Models (LLMs) | w/ Example Code</a>
 - <a href="https://js.langchain.com/docs/get_started/installation">Langchain</a>
   - <a href="https://www.youtube.com/watch?v=veV2I-NEjaM">Langchain JS | How to Use GPT-3, GPT-4 to Reference your own Data | OpenAI Embeddings Intro</a>
 - <a href="https://openai.com/blog/introducing-chatgpt-and-whisper-apis">ChatGPT</a>
   - <a href="https://www.youtube.com/watch?v=1YU83Lw58eo">Write A ChatGPT Chatbot With Node.js</a>
 
-<br>
-
-**Spotify**  
+#### Spotify
 - Spotify Remote is used to control Spotify through React Native
 
-## Roadblocks and Possible Solutions
+## Roadblocks and Possible Solutions 🚧
 
 - Real-time latency for directions with an LLM  
   - Feeding the directions into an LLM in real time may cause delay and be inaccurate at some points when driving. Instead, we could just speak the directions outside of the LLM.
@@ -194,13 +189,13 @@ Start to focus on connecting the backend to frontend as a team
 - The backend team falling behind.  
   - The frontend team can try to help the backend team. This can be a good learning experience for both teams.
 
-## Competition
+## Competition 🏆
 
 - Any maps app (No real time conversation or feedback based on driver)  
 - Beep: Drowsiness Detection (Needs an airpod, does not detect lane veering, no conversational feedback)  
 - ChatGPT/any LLM (No feedback to driver, or drive detection)
 
-## Other Resources
+## Other Resources 📚
 
 - Visual Studio Code or Android Studio  
 - React Native  
@@ -208,7 +203,7 @@ Start to focus on connecting the backend to frontend as a team
 - GitHub - Docs - Tutorial  
 - MongoDB
 
-## Git Commands :notebook:
+## Git Commands 📝
 
 | Command                       | What it does                        |
 | ----------------------------- | ----------------------------------- |
@@ -221,9 +216,7 @@ Start to focus on connecting the backend to frontend as a team
 | git push origin "branch"      | push to branch                      |
 | git pull origin "branch"      | pull updates from a specific branch |
 
-<br>
-
-## CoDriver TEAM! :partying_face: :fireworks:
+## CoDriver TEAM! 👥
 
 - Anusha Patel
 - Kaushik Shivakumar
