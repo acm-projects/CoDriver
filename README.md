@@ -138,35 +138,49 @@ Start to focus on connecting the backend to frontend as a team
 
 ## Tech Stack
 
-**React Native with Expo**  
-- Learn the Basics  
-- Setting up the Environment  
-- React Native #1: Setup Visual Studio Code  
-- React Native Tutorial for Beginners - Getting Started  
+#### React Native
+- <a href="https://reactnative.dev/docs/tutorial?language=javascript">Learn the Basics</a>
+- <a href="https://reactnative.dev/docs/environment-setup">Setting up the Environment</a>
+- <a href="https://www.youtube.com/playlist?list=PLC3y8-rFHvwhiQJD1di4eRVN30WWCXkg1">React Native Playlist</a>
+- <a href="https://www.youtube.com/watch?v=mrjy92pW0kM">React Native #1: Setup Visual Studio Code</a>
+- <a href="https://www.youtube.com/watch?v=6ZnfsJ6mM5c">React Native Tutorial for Beginners - Getting Started</a>
+- Getting the User’s location:
+  - <a href="https://www.youtube.com/watch?v=d7G0E_9FwyE">Get Current Location,  Geocode and Reverse Geocode in Expo React Native Apps using expo-location</a>
+- QR code
+  - <a href="https://www.youtube.com/watch?v=ZAjrx36WJxU">Working with QR Codes and React-Native with Typescript [2022]</a>
 
-**Android Studio (Simulator)**  
-- How to install Android Studio on Windows 10/11 [ 2023 Update ] Flamingo Installation  
-- How to Install Android Studio on Mac  
+#### Android Studio
+- <a href="https://www.youtube.com/watch?v=DM783YA0vbc">How to install Android Studio on Windows 10/11 [ 2023 Update ] Flamingo Installation</a>
+- <a href="https://www.youtube.com/watch?v=ri90tcQL-Aw">How to Install Android Studio on Mac</a>
 
-**MERN Stack**  
-- MERN Stack Playlist  
-- How to Start WIth Node & Express From Zero - Node Authentication API Part-1  
-- MongoDB Playlist  
-- Complete MongoDB Tutorial #1 - What is MongoDB?
 
-**APIs**  
-- Fetching Data from An API  in React Native  
-- Searching for APIs  
-- Suggestions  
-  - Google Directions API: Directions API  
-  - Build A REST API With Node.js, Express, & MongoDB - Quick
+#### MERN Stack
+- This works really well with React Native and with MongoDB it can handle any form of data without any issue
+- MERN Stack Playlist. It goes over how to create user authentication. Hence, I suggest looking at that portion
+  - <a href="https://www.youtube.com/watch?v=P5QbE9aRCLQ&list=PLaAoUJDWH9WrPXMOkqHHsPHxbhvRDqryM">How to Start WIth Node & Express From Zero - Node Authentication API Part-1</a>
+- MongoDB Playlist:
+  - <a href="https://www.youtube.com/watch?v=ExcRbA7fy_A&list=PL4cUxeGkcC9h77dJ-QJlwGlZlTd4ecZOA">Complete MongoDB Tutorial #1 - What is MongoDB?</a>
 
-**LLM**  
-- ChatGPT  
-  - Write A ChatGPT Chatbot With Node.js  
-- Chatbot Fine Tuning -Fine-tuning Large Language Models (LLMs) | w/ Example Code  
-- Langchain  
-  - Langchain JS | How to Use GPT-3, GPT-4 to Reference your own Data | OpenAI Embeddings Intro
+
+#### APIs
+- <a href="https://www.youtube.com/watch?v=KJhg761xb3c">Fetching Data from An API in React Native</a>
+- <a href="https://rapidapi.com/search/restaurants/">Searching for APIs</a>
+- Suggestions
+  - <a href="https://tripadvisor-content-api.readme.io/reference/searchfornearbylocations">Tripadvisor API</a>
+  - From Rapid API: <a href="https://rapidapi.com/ptwebsolution/api/restaurants222/">Restaurant API</a>
+- <a href="https://www.youtube.com/watch?v=fgTGADljAeg">Build A REST API With Node.js, Express, & MongoDB - Quick</a>
+
+
+#### LLM
+- 5 min vid: <a href="https://www.youtube.com/watch?v=5sLYAQS9sWQ">How Large Language Models Work</a>
+- Chatbot Fine Tuning
+  - <a href="https://www.youtube.com/watch?v=eC6Hd1hFvos">Fine-tuning Large Language Models (LLMs) | w/ Example Code</a>
+- <a href="https://js.langchain.com/docs/get_started/installation">Langchain</a>
+  - <a href="https://www.youtube.com/watch?v=veV2I-NEjaM">Langchain JS | How to Use GPT-3, GPT-4 to Reference your own Data | OpenAI Embeddings Intro</a>
+- <a href="https://openai.com/blog/introducing-chatgpt-and-whisper-apis">ChatGPT</a>
+  - <a href="https://www.youtube.com/watch?v=1YU83Lw58eo">Write A ChatGPT Chatbot With Node.js</a>
+
+<br>
 
 **Spotify**  
 - Spotify Remote is used to control Spotify through React Native
@@ -209,10 +223,9 @@ Start to focus on connecting the backend to frontend as a team
 
 <br>
 
-## DineOutBuddy TEAM!! :partying_face: :fireworks:
+## CoDriver TEAM! :partying_face: :fireworks:
 
-- Jason Luu
-- Adarsh Goura
-- Amulya Prasad Rayabhagi
-- Kousthub Ganugapati
-- Jordan Tan
+- Anusha Patel
+- Kaushik Shivakumar
+- Siddhartha Somalinga Kailash
+- Sri Satya Sourish Reddy
