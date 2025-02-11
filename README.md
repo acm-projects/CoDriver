@@ -1,5 +1,5 @@
 <p align="center">
-  <!-- You can replace the URL below with a relevant header image if desired -->
+
   <img src="https://www.sbmarketingtools.com/wp-content/uploads/2020/02/How-to-Open-Restaurant.jpg" width="700">
 </p>
 
