@@ -1,9 +1,58 @@
 const express = require('express');
-const app = express();
-const port = 3000;
+const bodyParser = require('body-parser');
+const AIController = require('./controllers/aiController');
+const commandController = require('./controllers/commandController');
+const weatherController = require('./controllers/weatherController');
 const musicController = require('./controllers/musicController');
 
+const app = express();
+const port = 3000;
+
+// middleware
 app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// endpoint to handle user input and generate a response- might move to routes folder
+app.post('/conversation', async (req, res) => {
+  const { userInput } = req.body;
+
+
+if (!userInput) {
+  return res.status(400).json({ error: 'User input is required' });
+}
+
+try {
+  const aiResponse = await AIController.handleUserInput(userInput);
+  res.json({
+    message: 'Conversation successful',
+    userInput,
+    aiResponse,
+  });
+
+} catch (error) {
+  console.error('Error handling conversation:', error);
+  res.status(500).json({ error: 'Failed to generate response' });
+}
+});
+
+
+app.post('/command', async (req, res) => {
+  const { command } = req.body;
+
+  if (!command) {
+    return res.status(400).json({ error: 'Command is required' });
+  }
+
+  try {
+    const response = await commandController.processCommand(command);
+    res.json(response);
+  } catch (error) {
+    console.error('Error processing command:', error);
+    res.status(500).json({ error: 'Failed to process command' });
+  }
+
+});
 
 // music control routes
 app.post('/api/music/play', async (req, res) => {
