@@ -9,7 +9,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const colorScheme = useColorScheme()
 
   return (
     <Tabs
@@ -20,24 +20,45 @@ export default function TabLayout() {
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
+            position: 'absolute', // Restored original positioning
+            display: 'none', // Hide tab bar on iOS
           },
           default: {},
         }),
       }}>
       <Tabs.Screen
-        name="index"
+        name="login"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Login',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="lock.fill" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="start"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Start',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="lock.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="signup"
+        options={{
+          title: 'Signup',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="lock.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Home',
+          tabBarButton: () => null,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarButton: () => null,
         }}
       />
     </Tabs>
