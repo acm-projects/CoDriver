@@ -66,7 +66,7 @@ export default function Example() {
               alt="App Logo"
               resizeMode="contain"
               style={styles.headerImg}
-              source={require('/Users/siddharthasomalinga/Downloads/CoDriver/frontend/assets/images/logo.png')} />
+              source={require('../../assets/images/logo.png')} />
           </View>
 
           {/* Title with Gradient */}
