@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     textAlign: 'center',
     alignSelf: 'center',
-    width: '100%', 
+    width: '100%',
   },
   gradientSubtitle: {
     fontSize: 20,
@@ -126,9 +126,9 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   header: {
-    flex: 0.65, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
+    flex: 0.65,
+    justifyContent: 'center',
+    alignItems: 'center',
     width: '100%',
   },
   logoContainer: {
@@ -140,8 +140,8 @@ const styles = StyleSheet.create({
   headerImg: {
     width: 130,
     height: 130,
-    marginTop: 10, 
-    alignSelf: 'center', 
+    marginTop: 10,
+    alignSelf: 'center',
   },
   googleBtn: {
     flexDirection: 'row',
@@ -153,8 +153,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: '#FFFFFF',
     borderColor: '#ffffff',
-    marginTop: -30, 
-    alignSelf: 'center', 
+    marginTop: -30,
+    alignSelf: 'center',
   },
   googleBtnText: {
     fontSize: 18,

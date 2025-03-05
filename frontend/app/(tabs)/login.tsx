@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   SafeAreaView,
@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useRouter } from 'expo-router';
+import * as Network from 'expo-network'; // Import expo-network
 
 
 export default function Example() {
@@ -22,37 +23,55 @@ export default function Example() {
     password: '',
   });
 
-  
+  const [ipAddress, setIpAddress] = useState('');
+
+  // Fetch the device's IP address once the component is mounted
+  useEffect(() => {
+    const getIpAddress = async () => {
+      const ip = await Network.getIpAddressAsync();
+      setIpAddress(ip);
+    };
+    getIpAddress();
+  }, []);
 
   const handleLogin = async () => {
-    try {
-        const response = await fetch('http://10.169.162.118:3000/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                name: form.email, // Using email as the username
-                password: form.password,
-            }),
-        });
-
-        const textResponse = await response.text(); // Get raw text response
-        console.log("Response:", textResponse);  // Log the raw response
-
-        // Only parse if the response is JSON
-        if (response.ok) {
-            const data = JSON.parse(textResponse);  // Manually parse if it's JSON
-            alert(data.message);
-            router.push('/home');
-        } else {
-            alert(textResponse); // Show raw error response
-        }
-    } catch (error) {
-        console.error('Error during login:', error);
-        alert('Login failed. Please try again.');
+    if (!ipAddress) {
+      alert("Could not determine IP address. Check network settings.");
+      return;
     }
-};
+
+    try {
+      const response = await fetch(`http://${ipAddress}:3000/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: form.email, // Using email as the username
+          password: form.password,
+        }),
+      });
+
+      const textResponse = await response.text(); // Get raw text response
+      console.log("Response:", textResponse);  // Log the raw response
+
+      // Only parse if the response is JSON
+      if (response.ok) {
+        const data = JSON.parse(textResponse);  // Manually parse if it's JSON
+        alert(data.message);
+        router.push('/home');
+      } else {
+        alert(textResponse); // Show raw error response
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      alert('Login failed. Please try again.');
+    }
+  };
+
+
+
+
 
 
   // Placeholder function for Google Sign Up (yet to be implemented)
@@ -69,7 +88,7 @@ export default function Example() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#1E1E1E' }}>
       <View style={styles.container}>
         <View style={styles.header}>
-          
+
           {/* App Logo */}
           <View style={styles.logoContainer}>
             <Image
@@ -82,18 +101,18 @@ export default function Example() {
 
           {/* Title with Gradient */}
           <MaskedView
-              maskElement={<Text style={styles.gradientTitle}>Welcome Back</Text>}>
-              <LinearGradient colors={['#FF822F', '#FFFFFF']} start={[0, 0]} end={[1, 1]}>
-                <Text style={[styles.gradientTitle, { opacity: 0 }]}>Welcome Back</Text>
-              </LinearGradient>
+            maskElement={<Text style={styles.gradientTitle}>Welcome Back</Text>}>
+            <LinearGradient colors={['#FF822F', '#FFFFFF']} start={[0, 0]} end={[1, 1]}>
+              <Text style={[styles.gradientTitle, { opacity: 0 }]}>Welcome Back</Text>
+            </LinearGradient>
           </MaskedView>
-          
+
           {/* Subtitle with Gradient */}
           <MaskedView
-              maskElement={<Text style={styles.gradientSubtitle}>To your companion driver</Text>}>
-              <LinearGradient colors={['#FF822F', '#FFFFFF']} start={[0, 0]} end={[1, 1]}>
-                <Text style={[styles.gradientSubtitle, { opacity: 0 }]}>To your companion driver</Text>
-              </LinearGradient>
+            maskElement={<Text style={styles.gradientSubtitle}>To your companion driver</Text>}>
+            <LinearGradient colors={['#FF822F', '#FFFFFF']} start={[0, 0]} end={[1, 1]}>
+              <Text style={[styles.gradientSubtitle, { opacity: 0 }]}>To your companion driver</Text>
+            </LinearGradient>
           </MaskedView>
         </View>
 

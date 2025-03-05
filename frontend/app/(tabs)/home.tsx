@@ -58,7 +58,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black', 
+    backgroundColor: 'black',
   },
   topLeftContainer: {
     position: 'absolute',
@@ -81,19 +81,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 470,
     height: 430,
-    top: '25%', 
-    alignSelf: 'center', 
+    top: '25%',
+    alignSelf: 'center',
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', 
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   popup: {
     width: '85%',
     height: 300,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)', 
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     padding: 25,
     borderRadius: 15,
     alignItems: 'center',
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', 
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 5,
     paddingHorizontal: 10,
     color: 'white',

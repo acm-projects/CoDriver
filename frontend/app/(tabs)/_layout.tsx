@@ -13,8 +13,7 @@ export default function TabLayout() {
   const segments = useSegments(); // Get current route segments
   const navigationState = useRootNavigationState(); // Ensure navigation is ready
 
-  // Log segments to debug route detection
-  console.log('segments:', segments);
+
 
   // Hide tab bar on login, signup, and index pages
   const isHiddenScreen =
@@ -36,13 +35,13 @@ export default function TabLayout() {
         tabBarBackground: TabBarBackground,
         tabBarStyle: isHiddenScreen
           ? { display: 'none' } // Hide tab bar for login/signup/index
-          : { 
-              position: 'absolute',
-              flexDirection: 'row',  // Arrange tabs in a row
-              justifyContent: 'space-between',  // Position Home on the left, Settings on the right
-              width: '100%',  // Ensure it spans the full width of the screen
-              paddingHorizontal: 20,  // Add padding on the sides
-            },
+          : {
+            position: 'absolute',
+            flexDirection: 'row',  // Arrange tabs in a row
+            justifyContent: 'space-between',  // Position Home on the left, Settings on the right
+            width: '100%',  // Ensure it spans the full width of the screen
+            paddingHorizontal: 20,  // Add padding on the sides
+          },
       }}>
       {/* Home tab positioned on the left */}
       <Tabs.Screen

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   SafeAreaView,
@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useRouter } from 'expo-router';
+import * as Network from 'expo-network'; // Import expo-network
 
 export default function Example() {
   // Use the router from 'expo-router' for navigation
@@ -22,9 +23,28 @@ export default function Example() {
     password: '',
   });
 
+  const [ipAddress, setIpAddress] = useState('');
+  const [networkState, setNetworkState] = useState(null);
+
+  // Fetch the device's IP address once the component mounts
+  useEffect(() => {
+    const getIpAddress = async () => {
+      const ip = await Network.getIpAddressAsync();
+      setIpAddress(ip);
+    };
+
+    getIpAddress();
+  }, []); // Empty dependency array ensures this runs only once after mount
+
+
   const handleSignUp = async () => {
+    if (!ipAddress) {
+      alert("Could not determine IP address. Check network settings.");
+      return;
+    }
+
     try {
-      const response = await fetch('http://10.169.162.118:3000/signup', {
+      const response = await fetch(`http://${ipAddress}:3000/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,7 +55,7 @@ export default function Example() {
         }),
       });
 
-      const data = await response.text(); // Change this based on response structure
+      const data = await response.text(); // Handle this based on the API response
       if (response.ok) {
         router.push('/home'); // Navigate to home if signup is successful
       } else {
@@ -76,10 +96,10 @@ export default function Example() {
               colors={['#FF822F', '#FFFFFF']}
               start={[0, 0]}
               end={[1, 1]}>
-              <Text style={[styles.gradientTitle, {opacity: 0}]}>Welcome to</Text>
+              <Text style={[styles.gradientTitle, { opacity: 0 }]}>Welcome to</Text>
             </LinearGradient>
           </MaskedView>
-          
+
           {/* Gradient Title: 'CoDriver' */}
           <MaskedView
             maskElement={
@@ -89,7 +109,7 @@ export default function Example() {
               colors={['#FF822F', '#FFFFFF']}
               start={[0, 0]}
               end={[1, 1]}>
-              <Text style={[styles.gradientTitle, {opacity: 0}]}>CoDriver</Text>
+              <Text style={[styles.gradientTitle, { opacity: 0 }]}>CoDriver</Text>
             </LinearGradient>
           </MaskedView>
 
@@ -104,7 +124,7 @@ export default function Example() {
               colors={['#FF822F', '#FFFFFF']}
               start={[0, 0]}
               end={[1, 1]}>
-              <Text style={[styles.gradientSubtitle, {opacity: 0}]}>
+              <Text style={[styles.gradientSubtitle, { opacity: 0 }]}>
                 Your new driving companion to make your everyday a little bit safer
               </Text>
             </LinearGradient>
@@ -125,7 +145,7 @@ export default function Example() {
               placeholder="john@example.com"
               placeholderTextColor="#ccc"
               style={styles.inputControl}
-              value={form.email} 
+              value={form.email}
             />
           </View>
 
@@ -140,7 +160,7 @@ export default function Example() {
               placeholderTextColor="#ccc"
               style={styles.inputControl}
               secureTextEntry={true}
-              value={form.password} 
+              value={form.password}
             />
           </View>
 
@@ -178,7 +198,7 @@ export default function Example() {
       </View>
 
       {/* Image placeholder for right corner */}
-      
+
     </SafeAreaView>
   );
 }

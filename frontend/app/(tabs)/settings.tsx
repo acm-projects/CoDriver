@@ -18,19 +18,19 @@ export default function Example() {
   // Router hook to navigate between pages
   const router = useRouter();
 
-  
+
   // State to handle the toggle switch values independently
-const [drivingSuggestions, setDrivingSuggestions] = useState(false);
-const [darkMode, setDarkMode] = useState(false);
+  const [drivingSuggestions, setDrivingSuggestions] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
-  // Function to handle toggling each switch independently
-const toggleDrivingSuggestions = (value) => {
-  setDrivingSuggestions(value);
-};
+  const toggleDrivingSuggestions = (value: boolean) => {
+    setDrivingSuggestions(value);
+  };
 
-const toggleDarkMode = (value) => {
-  setDarkMode(value);
-};
+  const toggleDarkMode = (value: boolean) => {
+    setDarkMode(value);
+  };
+
 
   // Function to navigate to the login screen
   const navigateToLogin = () => {
@@ -51,7 +51,7 @@ const toggleDarkMode = (value) => {
               style={styles.headerImg}
               source={require('../../assets/images/logo.png')} />
           </View>
-          
+
 
           {/* Gradient text for app name */}
           <MaskedView
@@ -62,7 +62,7 @@ const toggleDarkMode = (value) => {
               colors={['#FF822F', '#FFFFFF']}
               start={[0, 0]}
               end={[1, 1]}>
-              <Text style={[styles.gradientTitle, {opacity: 0}]}>CoDriver</Text>
+              <Text style={[styles.gradientTitle, { opacity: 0 }]}>CoDriver</Text>
             </LinearGradient>
           </MaskedView>
         </View>
@@ -79,46 +79,39 @@ const toggleDarkMode = (value) => {
 
         {/* Toggle Switch for driving suggestions */}
         <View style={styles.toggleContainer}>
-  <Text style={styles.toggleText}>
-    Driving Suggestions
-  </Text>
-  <Switch
-    value={drivingSuggestions}
-    onValueChange={toggleDrivingSuggestions}
-    trackColor={{ false: "#767577", true: "#FF822F" }}
-    thumbColor={drivingSuggestions ? "#FFFFFF" : "#f4f3f4"}
-  />
-</View>
+          <Text style={styles.toggleText}>
+            Driving Suggestions
+          </Text>
+          <Switch
+            value={drivingSuggestions}
+            onValueChange={toggleDrivingSuggestions}
+            trackColor={{ false: "#767577", true: "#FF822F" }}
+            thumbColor={drivingSuggestions ? "#FFFFFF" : "#f4f3f4"}
+          />
+        </View>
 
-<View style={styles.toggleContainer}>
-  <Text style={styles.toggleText}>
-    Dark Mode
-  </Text>
-  <Switch
-    value={darkMode}
-    onValueChange={toggleDarkMode}
-    trackColor={{ false: "#767577", true: "#FF822F" }}
-    thumbColor={darkMode ? "#FFFFFF" : "#f4f3f4"}
-  />
-</View>
-
-
-        
-          
-          
+        <View style={styles.toggleContainer}>
+          <Text style={styles.toggleText}>
+            Dark Mode
+          </Text>
+          <Switch
+            value={darkMode}
+            onValueChange={toggleDarkMode}
+            trackColor={{ false: "#767577", true: "#FF822F" }}
+            thumbColor={darkMode ? "#FFFFFF" : "#f4f3f4"}
+          />
+        </View>
 
         <View style={styles.companionSection}>
-          
+
           <TouchableOpacity style={styles.chevronButton}>
             <Text style={styles.chevronText}>Companion </Text>
             <Ionicons name="chevron-forward" size={18} color="white" />
           </TouchableOpacity>
         </View>
 
-        
-
         <View style={styles.companionSection}>
-          
+
           <TouchableOpacity style={styles.chevronButton}>
             <Text style={styles.chevronText}>Delete Account </Text>
             <Ionicons name="chevron-forward" size={18} color="white" />
@@ -126,34 +119,32 @@ const toggleDarkMode = (value) => {
         </View>
 
         {/* Support Section */}
-<View style={[styles.companionSection, styles.supportSection]}>
-  <TouchableOpacity style={styles.chevronButton}>
-    <Text style={styles.chevronText}>Support </Text>
-    <Ionicons name="chevron-forward" size={18} color="white" />
-  </TouchableOpacity>
-</View>
-
-        
+        <View style={[styles.companionSection, styles.supportSection]}>
+          <TouchableOpacity style={styles.chevronButton}>
+            <Text style={styles.chevronText}>Support </Text>
+            <Ionicons name="chevron-forward" size={18} color="white" />
+          </TouchableOpacity>
+        </View>
 
         {/* Spotify Connect Button */}
         <View style={styles.formAction}>
-            <TouchableOpacity
-              onPress={() => {
-                // handle Google sign-in
-              }}>
-              <View style={styles.btn}>
-                {/* Google Logo */}
-                <Image
-                  source={{
-                    uri: 'https://e7.pngegg.com/pngimages/4/438/png-clipart-spotify-logo-spotify-mobile-app-computer-icons-app-store-music-free-icon-spotify-miscellaneous-logo.png',
-                  }}
-                  style={styles.spotifyLogo}
-                />
+          <TouchableOpacity
+            onPress={() => {
+              // handle Google sign-in
+            }}>
+            <View style={styles.btn}>
+              {/* Google Logo */}
+              <Image
+                source={{
+                  uri: 'https://e7.pngegg.com/pngimages/4/438/png-clipart-spotify-logo-spotify-mobile-app-computer-icons-app-store-music-free-icon-spotify-miscellaneous-logo.png',
+                }}
+                style={styles.spotifyLogo}
+              />
 
-                <Text style={styles.btnText}>Connect to Spotify</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
+              <Text style={styles.btnText}>Connect to Spotify</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
         {/* Log Out Button */}
         <View style={styles.formAction}>
@@ -168,7 +159,7 @@ const toggleDarkMode = (value) => {
         </View>
 
         {/* Footer with contact options */}
-        
+
       </View>
     </SafeAreaView>
   );
@@ -314,5 +305,5 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginRight: 10,
   }
-  
+
 });
