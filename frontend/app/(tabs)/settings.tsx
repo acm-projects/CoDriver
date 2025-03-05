@@ -6,41 +6,44 @@ import {
   Image,
   Text,
   TouchableOpacity,
-  TextInput,
-  Switch, // Make sure to import Switch
+  Switch,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
+// Main component for this screen
 export default function Example() {
+  // Router hook to navigate between pages
   const router = useRouter();
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-  });
+
   
-  // Toggle state
-  const [switchValue, setSwitchValue] = useState(false);
-  const toggleSwitch = (value) => {
-    setSwitchValue(value);
-  };
+  // State to handle the toggle switch values independently
+const [drivingSuggestions, setDrivingSuggestions] = useState(false);
+const [darkMode, setDarkMode] = useState(false);
 
-  const handleSignUp = () => {
-    // Add your sign up navigation logic here
-    console.log('Sign up pressed');
-  };
+  // Function to handle toggling each switch independently
+const toggleDrivingSuggestions = (value) => {
+  setDrivingSuggestions(value);
+};
 
+const toggleDarkMode = (value) => {
+  setDarkMode(value);
+};
+
+  // Function to navigate to the login screen
   const navigateToLogin = () => {
-    // Navigate to the login screen using router
     router.push('/login');
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#1E1E1E' }}>
       <View style={styles.container}>
+        {/* Header section */}
         <View style={styles.header}>
           {/* Logo container */}
+
           <View style={styles.logoContainer}>
             <Image
               alt="App Logo"
@@ -48,10 +51,9 @@ export default function Example() {
               style={styles.headerImg}
               source={require('../../assets/images/logo.png')} />
           </View>
-
-          {/* Welcome title */}
           
-          {/* App name */}
+
+          {/* Gradient text for app name */}
           <MaskedView
             maskElement={
               <Text style={styles.gradientTitle}>CoDriver</Text>
@@ -63,43 +65,78 @@ export default function Example() {
               <Text style={[styles.gradientTitle, {opacity: 0}]}>CoDriver</Text>
             </LinearGradient>
           </MaskedView>
+        </View>
 
-          {/* App subtitle */}
+        <View style={styles.profileContainer}>
+          <Image
+            source={{
+              uri: 'https://static.vecteezy.com/system/resources/thumbnails/009/734/564/small_2x/default-avatar-profile-icon-of-social-media-user-vector.jpg',
+            }}
+            style={styles.profileImage}
+          />
+          <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>Sourish Reddy</Text>
+        </View>
+
+        {/* Toggle Switch for driving suggestions */}
+        <View style={styles.toggleContainer}>
+  <Text style={styles.toggleText}>
+    Driving Suggestions
+  </Text>
+  <Switch
+    value={drivingSuggestions}
+    onValueChange={toggleDrivingSuggestions}
+    trackColor={{ false: "#767577", true: "#FF822F" }}
+    thumbColor={drivingSuggestions ? "#FFFFFF" : "#f4f3f4"}
+  />
+</View>
+
+<View style={styles.toggleContainer}>
+  <Text style={styles.toggleText}>
+    Dark Mode
+  </Text>
+  <Switch
+    value={darkMode}
+    onValueChange={toggleDarkMode}
+    trackColor={{ false: "#767577", true: "#FF822F" }}
+    thumbColor={darkMode ? "#FFFFFF" : "#f4f3f4"}
+  />
+</View>
+
+
+        
           
+          
+
+        <View style={styles.companionSection}>
+          
+          <TouchableOpacity style={styles.chevronButton}>
+            <Text style={styles.chevronText}>Companion </Text>
+            <Ionicons name="chevron-forward" size={18} color="white" />
+          </TouchableOpacity>
         </View>
 
         
 
-        <View style={styles.form}>
-          <View style={styles.input}>
-            <Text style={styles.inputLabel}>Name your companion</Text>
-
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              clearButtonMode="while-editing"
-              keyboardType="email-address"
-              onChangeText={email => setForm({ ...form, email })}
-              placeholder="john"
-              placeholderTextColor="#ffffff"
-              style={styles.inputControl}
-              value={form.email} />
-          </View>
-
-          {/* Toggle Switch Section */}
-        <View style={styles.toggleContainer}>
-          <Text style={styles.toggleText}>
-            {switchValue ? 'Driving Suggestions' : 'Driving Suggestions'}
-          </Text>
-          <Switch
-            value={switchValue}
-            onValueChange={toggleSwitch}
-            trackColor={{ false: "#767577", true: "#FF822F" }}
-            thumbColor={switchValue ? "#FFFFFF" : "#f4f3f4"}
-          />
+        <View style={styles.companionSection}>
+          
+          <TouchableOpacity style={styles.chevronButton}>
+            <Text style={styles.chevronText}>Delete Account </Text>
+            <Ionicons name="chevron-forward" size={18} color="white" />
+          </TouchableOpacity>
         </View>
 
-          <View style={styles.formAction}>
+        {/* Support Section */}
+<View style={[styles.companionSection, styles.supportSection]}>
+  <TouchableOpacity style={styles.chevronButton}>
+    <Text style={styles.chevronText}>Support </Text>
+    <Ionicons name="chevron-forward" size={18} color="white" />
+  </TouchableOpacity>
+</View>
+
+        
+
+        {/* Spotify Connect Button */}
+        <View style={styles.formAction}>
             <TouchableOpacity
               onPress={() => {
                 // handle Google sign-in
@@ -110,7 +147,7 @@ export default function Example() {
                   source={{
                     uri: 'https://e7.pngegg.com/pngimages/4/438/png-clipart-spotify-logo-spotify-mobile-app-computer-icons-app-store-music-free-icon-spotify-miscellaneous-logo.png',
                   }}
-                  style={styles.googleLogo}
+                  style={styles.spotifyLogo}
                 />
 
                 <Text style={styles.btnText}>Connect to Spotify</Text>
@@ -118,52 +155,26 @@ export default function Example() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.formAction}>
-            <TouchableOpacity
-              onPress={() => {
-                // handle Google sign-in
-              }}>
-              <View style={styles.googleBtn}>
-                {/* Google Logo */}
-                <Image
-                  source={{
-                    uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png',
-                  }}
-                  style={styles.googleLogo}
-                />
-
-                <Text style={styles.googleBtnText}>Sign Up with Google</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.formAction}>
-            <TouchableOpacity
-              onPress={() => {
-                // handle Google sign-in
-              }}>
-              <View style={styles.logOutBtn}>
-                <Text style={styles.logOutBtnText}>Log Out</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Sign In / Sign Up footer as button */}
-          <TouchableOpacity onPress={navigateToLogin} style={styles.loginButtonContainer}>
-            <Text style={styles.formFooter}>
-              Delete your Account
-            </Text>
-            <Text style={styles.formFooter}>
-              Need some help? <Text style={styles.signUpText}>Contact Us</Text>
-            </Text>
-           
+        {/* Log Out Button */}
+        <View style={styles.formAction}>
+          <TouchableOpacity
+            onPress={() => {
+              router.push('/login');
+            }}>
+            <View style={styles.logOutBtn}>
+              <Text style={styles.logOutBtnText}>Log Out</Text>
+            </View>
           </TouchableOpacity>
         </View>
+
+        {/* Footer with contact options */}
+        
       </View>
     </SafeAreaView>
   );
 }
 
+// Styling for the components
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
@@ -174,24 +185,20 @@ const styles = StyleSheet.create({
   gradientTitle: {
     fontSize: 40,
     fontWeight: '700',
-    marginBottom: 6,
+    marginBottom: -8,
     textAlign: 'left',
     alignSelf: 'flex-start',
   },
-  gradientSubtitle: {
-    fontSize: 20,
-    fontWeight: '500',
-    textAlign: 'left',
-    alignSelf: 'flex-start',
-    marginTop: 6,
+  companionSection: {
+    alignItems: 'center',
+    marginVertical: 10,
   },
-  /** Toggle container */
   toggleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginVertical: 16,
-    backgroundColor: '#3D3D3D',
+    marginVertical: 10,
+    backgroundColor: '#2F2F2F',
     borderRadius: 12,
     padding: 10,
   },
@@ -200,11 +207,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#FFFFFF',
   },
-  /** Header */
   header: {
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
-    marginVertical: 36,
+    marginVertical: 4,
     width: '100%',
   },
   logoContainer: {
@@ -217,19 +223,13 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     alignSelf: 'flex-start',
-    marginBottom: 10,
-  },
-  /** Form */
-  form: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
+    marginBottom: 5,
   },
   formAction: {
     marginTop: 4,
     marginBottom: 16,
   },
-  formFooter: {
+  footerText: {
     fontSize: 15,
     fontWeight: '600',
     color: '#fff',
@@ -245,36 +245,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  /** Input */
-  input: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  inputControl: {
-    height: 50,
-    backgroundColor: '#3D3D3D',
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#fff',
-    borderWidth: 1,
-    borderColor: '#3D3D3D',
-    borderStyle: 'solid',
-  },
-  /** Button */
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
     borderWidth: 1,
     backgroundColor: '#1ED760',
     borderColor: '#1ED760',
@@ -289,9 +266,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
     borderWidth: 1,
     backgroundColor: '#1E1E1E',
     borderColor: '#ffffff',
@@ -302,27 +279,40 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
-  /** Google Sign-in Button */
-  googleBtn: {
+  chevronButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    backgroundColor: '#FFFFFF',
-    borderColor: '#ffffff',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingVertical: 2,
+    marginTop: 10,
   },
-  googleLogo: {
+  chevronText: {
+    color: 'white',
+    fontSize: 16,
+    marginRight: 8,
+  },
+  // Add marginBottom to the Support section to increase space
+  supportSection: {
+    marginBottom: 30,  // Adjust this value as needed to create more space
+  },
+
+  spotifyLogo: {
     width: 20,
     height: 20,
     marginRight: 10,
   },
-  googleBtnText: {
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: '600',
-    color: '#000',
+  profileContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 20,
   },
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
+  }
+  
 });

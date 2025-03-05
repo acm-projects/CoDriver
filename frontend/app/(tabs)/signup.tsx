@@ -13,7 +13,10 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import { useRouter } from 'expo-router';
 
 export default function Example() {
+  // Use the router from 'expo-router' for navigation
   const router = useRouter();
+
+  // State for managing form input (email and password)
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -21,7 +24,7 @@ export default function Example() {
 
   const handleSignUp = async () => {
     try {
-      const response = await fetch('http://10.178.172.194:3000/signup', {
+      const response = await fetch('http://10.169.162.118:3000/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,18 +47,16 @@ export default function Example() {
     }
   };
 
-  
 
-  
-
+  // Function to navigate to the login screen
   const navigateToLogin = () => {
-    // Navigate to the login screen using router
-    router.push('/login');
+    router.push('/login'); // Navigate to the login screen
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#1E1E1E' }}>
       <View style={styles.container}>
+        {/* Header Section */}
         <View style={styles.header}>
           {/* Logo container */}
           <View style={styles.logoContainer}>
@@ -66,7 +67,7 @@ export default function Example() {
               source={require('../../assets/images/logo.png')} />
           </View>
 
-          {/* Welcome title */}
+          {/* Gradient Title: 'Welcome to' */}
           <MaskedView
             maskElement={
               <Text style={styles.gradientTitle}>Welcome to</Text>
@@ -79,7 +80,7 @@ export default function Example() {
             </LinearGradient>
           </MaskedView>
           
-          {/* App name */}
+          {/* Gradient Title: 'CoDriver' */}
           <MaskedView
             maskElement={
               <Text style={styles.gradientTitle}>CoDriver</Text>
@@ -92,7 +93,7 @@ export default function Example() {
             </LinearGradient>
           </MaskedView>
 
-          {/* App subtitle */}
+          {/* Gradient Subtitle: Description of the app */}
           <MaskedView
             maskElement={
               <Text style={styles.gradientSubtitle}>
@@ -110,38 +111,40 @@ export default function Example() {
           </MaskedView>
         </View>
 
+        {/* Form Section */}
         <View style={styles.form}>
+          {/* Email input */}
           <View style={styles.input}>
             <Text style={styles.inputLabel}>Email address</Text>
-
             <TextInput
-  autoCapitalize="none"
-  autoCorrect={false}
-  clearButtonMode="while-editing"
-  keyboardType="email-address"
-  onChangeText={(text) => setForm(prev => ({ ...prev, email: text }))}
-  placeholder="john@example.com"
-  placeholderTextColor="#ccc"
-  style={styles.inputControl}
-  value={form.email} 
-/>
+              autoCapitalize="none"
+              autoCorrect={false}
+              clearButtonMode="while-editing"
+              keyboardType="email-address"
+              onChangeText={(text) => setForm(prev => ({ ...prev, email: text }))}
+              placeholder="john@example.com"
+              placeholderTextColor="#ccc"
+              style={styles.inputControl}
+              value={form.email} 
+            />
           </View>
 
+          {/* Password input */}
           <View style={styles.input}>
             <Text style={styles.inputLabel}>Password</Text>
-
             <TextInput
-  autoCorrect={false}
-  clearButtonMode="while-editing"
-  onChangeText={(text) => setForm(prev => ({ ...prev, password: text }))}
-  placeholder="********"
-  placeholderTextColor="#ccc"
-  style={styles.inputControl}
-  secureTextEntry={true}
-  value={form.password} 
-/>
+              autoCorrect={false}
+              clearButtonMode="while-editing"
+              onChangeText={(text) => setForm(prev => ({ ...prev, password: text }))}
+              placeholder="********"
+              placeholderTextColor="#ccc"
+              style={styles.inputControl}
+              secureTextEntry={true}
+              value={form.password} 
+            />
           </View>
 
+          {/* Sign up button */}
           <View style={styles.formAction}>
             <TouchableOpacity onPress={handleSignUp}>
               <View style={styles.btn}>
@@ -150,6 +153,7 @@ export default function Example() {
             </TouchableOpacity>
           </View>
 
+          {/* Google Sign Up button */}
           <View style={styles.formAction}>
             <TouchableOpacity onPress={handleSignUp}>
               <View style={styles.googleBtn}>
@@ -164,7 +168,7 @@ export default function Example() {
             </TouchableOpacity>
           </View>
 
-          {/* Sign In / Sign Up footer as button */}
+          {/* Sign In / Sign Up footer button */}
           <TouchableOpacity onPress={navigateToLogin} style={styles.loginButtonContainer}>
             <Text style={styles.formFooter}>
               Have an account? <Text style={styles.signUpText}>Sign in here</Text>
@@ -173,19 +177,21 @@ export default function Example() {
         </View>
       </View>
 
-      {/* Image placed in the right corner */}
+      {/* Image placeholder for right corner */}
       
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // Main container style
   container: {
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
     padding: 24,
   },
+  // Styles for gradient title
   gradientTitle: {
     fontSize: 40,
     fontWeight: '700',
@@ -193,6 +199,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     alignSelf: 'flex-start',
   },
+  // Styles for subtitle
   gradientSubtitle: {
     fontSize: 20,
     fontWeight: '500',
@@ -200,7 +207,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: 6,
   },
-  /** Header */
+  /** Header Styles */
   header: {
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
@@ -219,7 +226,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 10,
   },
-  /** Form */
+  /** Form Styles */
   form: {
     flexGrow: 1,
     flexShrink: 1,
@@ -245,7 +252,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  /** Input */
+  /** Input Styles */
   input: {
     marginBottom: 16,
   },
@@ -267,7 +274,7 @@ const styles = StyleSheet.create({
     borderColor: '#3D3D3D',
     borderStyle: 'solid',
   },
-  /** Button */
+  /** Button Styles */
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -285,7 +292,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
-  /** Google Sign-in Button */
+  /** Google Sign-in Button Styles */
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',

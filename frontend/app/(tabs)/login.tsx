@@ -12,16 +12,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useRouter } from 'expo-router';
 
+
 export default function Example() {
-  const router = useRouter();
+  const router = useRouter(); // Hook for navigation
+
+  // State for handling form inputs (email & password)
   const [form, setForm] = useState({
     email: '',
     password: '',
   });
 
+  
+
   const handleLogin = async () => {
     try {
-        const response = await fetch('http://10.178.172.194:3000/login', {
+        const response = await fetch('http://10.169.162.118:3000/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -50,22 +55,13 @@ export default function Example() {
 };
 
 
-  
-  
-  
-
-  const handleSignUp = () => {
-    // Add your sign up navigation logic here
-    console.log('Sign in with Google pressed');
-  };
-
+  // Placeholder function for Google Sign Up (yet to be implemented)
   const handleSignUpwithGoogle = () => {
-    // Add your sign up navigation logic here
     console.log('Sign in with Google pressed');
   };
 
+  // Function to navigate to signup page
   const navigateToLogin = () => {
-    // Navigate to the login screen using router
     router.push('/signup');
   };
 
@@ -73,72 +69,66 @@ export default function Example() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#1E1E1E' }}>
       <View style={styles.container}>
         <View style={styles.header}>
-          {/* Modified the logo container to be more to the left */}
+          
+          {/* App Logo */}
           <View style={styles.logoContainer}>
             <Image
               alt="App Logo"
               resizeMode="contain"
               style={styles.headerImg}
-              source={require('../../assets/images/logo.png')} />
+              source={require('../../assets/images/logo.png')}
+            />
           </View>
 
-          {/* First part of the title always shows */}
+          {/* Title with Gradient */}
           <MaskedView
-              maskElement={
-                <Text style={styles.gradientTitle}>Welcome Back</Text>
-              }>
-              <LinearGradient
-                colors={['#FF822F', '#FFFFFF']}
-                start={[0, 0]}
-                end={[1, 1]}>
-                <Text style={[styles.gradientTitle, {opacity: 0}]}>Welcome Back</Text>
+              maskElement={<Text style={styles.gradientTitle}>Welcome Back</Text>}>
+              <LinearGradient colors={['#FF822F', '#FFFFFF']} start={[0, 0]} end={[1, 1]}>
+                <Text style={[styles.gradientTitle, { opacity: 0 }]}>Welcome Back</Text>
               </LinearGradient>
-            </MaskedView>
+          </MaskedView>
           
-          {/* Subtitle */}
+          {/* Subtitle with Gradient */}
           <MaskedView
-              maskElement={
-                <Text style={styles.gradientSubtitle}>To your companion driver</Text>
-              }>
-              <LinearGradient
-                colors={['#FF822F', '#FFFFFF']}
-                start={[0, 0]}
-                end={[1, 1]}>
-                <Text style={[styles.gradientSubtitle, {opacity: 0}]}>To your companion driver</Text>
+              maskElement={<Text style={styles.gradientSubtitle}>To your companion driver</Text>}>
+              <LinearGradient colors={['#FF822F', '#FFFFFF']} start={[0, 0]} end={[1, 1]}>
+                <Text style={[styles.gradientSubtitle, { opacity: 0 }]}>To your companion driver</Text>
               </LinearGradient>
-            </MaskedView>
+          </MaskedView>
         </View>
 
+        {/* Login Form */}
         <View style={styles.form}>
+          {/* Email Input */}
           <View style={styles.input}>
             <Text style={styles.inputLabel}>Email address</Text>
-
             <TextInput
               autoCapitalize="none"
               autoCorrect={false}
-              clearButtonMode="while-editing"
               keyboardType="email-address"
-              onChangeText={email => setForm({ ...form, email })}
               placeholder="john@example.com"
               placeholderTextColor="#ffffff"
               style={styles.inputControl}
-              value={form.email} />
+              value={form.email}
+              onChangeText={email => setForm({ ...form, email })}
+            />
           </View>
 
+          {/* Password Input */}
           <View style={styles.input}>
             <Text style={styles.inputLabel}>Password</Text>
-
             <TextInput
               autoCorrect={false}
-              clearButtonMode="while-editing"
-              onChangeText={password => setForm({ ...form, password })}
               placeholder="********"
               placeholderTextColor="#ffffff"
               style={styles.inputControl}
               secureTextEntry={true}
-              value={form.password} />
+              value={form.password}
+              onChangeText={password => setForm({ ...form, password })}
+            />
           </View>
 
+          {/* Sign In Button */}
           <View style={styles.formAction}>
             <TouchableOpacity onPress={handleLogin}>
               <View style={styles.btn}>
@@ -147,34 +137,34 @@ export default function Example() {
             </TouchableOpacity>
           </View>
 
+          {/* Sign In with Google Button */}
           <View style={styles.formAction}>
-          <TouchableOpacity onPress={handleSignUpwithGoogle}>
-  <View style={styles.googleBtn}>
-    <Image
-      source={{
-        uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png',
-      }}
-      style={styles.googleLogo}
-    />
-    <Text style={styles.googleBtnText}>Sign In with Google</Text>
-  </View>
-</TouchableOpacity>
+            <TouchableOpacity onPress={handleSignUpwithGoogle}>
+              <View style={styles.googleBtn}>
+                <Image
+                  source={{
+                    uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png',
+                  }}
+                  style={styles.googleLogo}
+                />
+                <Text style={styles.googleBtnText}>Sign In with Google</Text>
+              </View>
+            </TouchableOpacity>
           </View>
 
-          {/* Sign In / Sign Up footer */}
+          {/* Sign Up Link */}
           <TouchableOpacity onPress={navigateToLogin} style={styles.loginButtonContainer}>
-                      <Text style={styles.formFooter}>
-                        Don't have an account? <Text style={styles.signUpText}>Sign in here</Text>
-                      </Text>
-                    </TouchableOpacity>
+            <Text style={styles.formFooter}>
+              Don't have an account? <Text style={styles.signUpText}>Sign up here</Text>
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
-      {/* Image placed in the right corner */}
-            
     </SafeAreaView>
   );
 }
 
+// Styles for the components
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
@@ -182,28 +172,12 @@ const styles = StyleSheet.create({
     flexBasis: 0,
     padding: 24,
   },
-  title: {
-    fontSize: 40,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 6,
-    textAlign: 'left',
-    alignSelf: 'flex-start',
-  },
   gradientTitle: {
     fontSize: 40,
     fontWeight: '700',
     marginBottom: 6,
     textAlign: 'left',
     alignSelf: 'flex-start',
-  },
-  subtitle: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: '#FF822F',
-    textAlign: 'left',
-    alignSelf: 'flex-start',
-    marginTop: 6,
   },
   gradientSubtitle: {
     fontSize: 20,
@@ -213,18 +187,16 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: 6,
   },
-  /** Header */
   header: {
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
     marginVertical: 36,
     width: '100%',
   },
-  // Modified logoContainer to push logo further left
   logoContainer: {
     width: '100%',
     paddingLeft: 0,
-    marginLeft: -15, // Increased from -10 to -20 to push more to the left
+    marginLeft: -15,
     alignItems: 'flex-start',
   },
   headerImg: {
@@ -233,29 +205,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 10,
   },
-  /** Form */
   form: {
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
   },
-  formAction: {
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  formFooter: {
-    paddingVertical: 24,
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
-    textAlign: 'center',
-    letterSpacing: 0.15,
-  },
-  signUpText: {
-    color: '#FF822F',
-    fontWeight: '600',
-  },
-  /** Input */
   input: {
     marginBottom: 16,
   },
@@ -275,9 +229,11 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     borderWidth: 1,
     borderColor: '#3D3D3D',
-    borderStyle: 'solid',
   },
-  /** Button */
+  formAction: {
+    marginTop: 4,
+    marginBottom: 16,
+  },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -291,12 +247,9 @@ const styles = StyleSheet.create({
   },
   btnText: {
     fontSize: 18,
-    lineHeight: 26,
     fontWeight: '600',
     color: '#fff',
   },
-
-  /** Google Sign-in Button */
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -304,26 +257,29 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderWidth: 1,
     backgroundColor: '#FFFFFF',
-    borderColor: '#ffffff',
   },
-
   googleLogo: {
     width: 20,
     height: 20,
     marginRight: 10,
   },
-  
   googleBtnText: {
     fontSize: 18,
-    lineHeight: 26,
     fontWeight: '600',
     color: '#000',
   },
   loginButtonContainer: {
     paddingVertical: 24,
     alignItems: 'center',
-    justifyContent: 'center',
+  },
+  formFooter: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  signUpText: {
+    color: '#FF822F',
+    fontWeight: '600',
   },
 });
