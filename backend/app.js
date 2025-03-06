@@ -2,6 +2,7 @@
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
+const validator = require("validator"); // For email validation
 const LogInCollection = require("./mongo"); // Import the MongoDB collection model
 
 const app = express();
@@ -24,34 +25,63 @@ app.get('/', (req, res) => {
     res.json({ message: "Server is running!" });
 });
 
+// ✅ Email Validation Function (Using Validator.js)
+const isValidEmail = (email) => validator.isEmail(email);
+
+// ✅ Password Validation Function (Without Regex)
+const isValidPassword = (password) => {
+    return (
+        password.length >= 8 &&                      // At least 8 characters
+        /[A-Z]/.test(password) &&                   // At least one uppercase letter
+        /[a-z]/.test(password) &&                   // At least one lowercase letter
+        /[0-9]/.test(password) &&                   // At least one number
+        /[!@#$%^&*(),.?":{}|<>]/.test(password)     // At least one special character
+    );
+};
+
 // POST route for user signup
 app.post('/signup', async (req, res) => {
     console.log('Signup request received:', req.body); // Logging the received request body
 
-    // Extract user data from request body
-    const data = {
-        name: req.body.name,
-        password: req.body.password
-    };
+    const { email, password } = req.body;
+
+    // Ensure email and password are provided
+    if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    // Validate Email
+    if (!isValidEmail(email)) {
+        return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    // Validate Password
+    if (!isValidPassword(password)) {
+        return res.status(400).json({
+            message: "Weak password. Must be 8+ chars, include uppercase, lowercase, number, and special char."
+        });
+    }
 
     try {
         // Check if the user already exists in the database
-        const checking = await LogInCollection.findOne({ name: req.body.name });
+        const checking = await LogInCollection.findOne({ email });
 
         if (checking) {
-            return res.status(400).json({ message: "User already exists" }); // Respond with a proper status code
-        } 
+            return res.status(400).json({ message: "User already exists" });
+        }
 
         // Insert new user data into MongoDB
-        await LogInCollection.insertMany([data]);
-        console.log('User inserted:', data);
+        const newUser = { email, password };
+        await LogInCollection.insertMany([newUser]);
+        console.log('User inserted:', newUser);
 
-        res.status(201).json({ message: "Signup successful", user: req.body.name }); // Respond with success
+        res.status(201).json({ message: "Signup successful", user: email });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Error during signup" }); // Handle errors properly
+        res.status(500).json({ message: "Error during signup" });
     }
 });
+
 
 // POST route for user login
 app.post('/login', async (req, res) => {

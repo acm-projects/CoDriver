@@ -12,9 +12,9 @@ mongoose.connect("mongodb://127.0.0.1:27017/LoginFormPractice")
 
 // Define the schema for the login collection
 const logInSchema = new mongoose.Schema({
-    name: {
+    email: {
         type: String,
-        required: true // Name field is required
+        required: true // Email field is required
     },
     password: {
         type: String,

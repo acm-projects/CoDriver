@@ -50,7 +50,7 @@ export default function Example() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: form.email, // Using email as the username
+          email: form.email, // Using email as the username
           password: form.password,
         }),
       });
