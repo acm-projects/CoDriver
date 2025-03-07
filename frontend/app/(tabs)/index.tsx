@@ -35,17 +35,18 @@ export default function HomeScreen() {
               style={styles.input}
               placeholder="Where are you heading today?"
               placeholderTextColor="rgba(255, 255, 255, 0.6)"
-
-              onChangeText={() => setShowSpeechRecognition(true)} 
+              onFocus={() => setShowSpeechRecognition(true)} // Show SpeechRecognition when input is focused
             />
+
             <TouchableOpacity style={styles.button}>
               <Text style={styles.buttonText}>I'm feeling lucky!</Text>
+              
             </TouchableOpacity>
             <TouchableOpacity 
-            style={styles.button} 
-            onPress={() => { 
-              setModalVisible(false); 
-              setShowSpeechRecognition(true); 
+              style={styles.button} 
+              onPress={() => { 
+                setModalVisible(false); 
+                setShowSpeechRecognition(true); 
             }}
           ></TouchableOpacity>
           </View>

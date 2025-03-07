@@ -1,115 +1,33 @@
-import { Component } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  TouchableHighlight,
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Button, Text } from 'react-native';
+import Voice from '@react-native-voice/voice';
 
-import Voice, {
-  type SpeechRecognizedEvent,
-  type SpeechResultsEvent,
-  type SpeechErrorEvent,
-} from '@react-native-voice/voice';
+const SpeechRecognition: React.FC = () => {
+  const [recognized, setRecognized] = useState('');
+  const [error, setError] = useState('');
+  const [results, setResults] = useState<string[]>([]);
+  const [partialResults, setPartialResults] = useState<string[]>([]);
 
-type Props = {};
-type State = {
-  recognized: string;
-  pitch: string;
-  error: string;
-  end: string;
-  started: string;
-  results: string[];
-  partialResults: string[];
-};
+  useEffect(() => {
+    Voice.onSpeechStart = () => setRecognized('Listening...');
+    Voice.onSpeechRecognized = () => setRecognized('Recognized');
+    Voice.onSpeechEnd = () => setRecognized('Speech Ended');
+    Voice.onSpeechError = (e) => setError(e?.error?.toString() || 'Unknown error');
+    Voice.onSpeechResults = (e) => setResults(e.value || []);
+    Voice.onSpeechPartialResults = (e) => setPartialResults(e.value || []);
+    
+    return () => {
+      Voice.destroy().then(Voice.removeAllListeners);
+    };
+  }, []);
+  
+  
 
-class VoiceTest extends Component<Props, State> {
-  state = {
-    recognized: '',
-    pitch: '',
-    error: '',
-    end: '',
-    started: '',
-    results: [],
-    partialResults: [],
-  };
-
-  constructor(props: Props) {
-    super(props);
-    Voice.onSpeechStart = this.onSpeechStart;
-    Voice.onSpeechRecognized = this.onSpeechRecognized;
-    Voice.onSpeechEnd = this.onSpeechEnd;
-    Voice.onSpeechError = this.onSpeechError;
-    Voice.onSpeechResults = this.onSpeechResults;
-    Voice.onSpeechPartialResults = this.onSpeechPartialResults;
-    Voice.onSpeechVolumeChanged = this.onSpeechVolumeChanged;
-  }
-
-  componentWillUnmount() {
-    Voice.destroy().then(Voice.removeAllListeners);
-  }
-
-  onSpeechStart = (e: any) => {
-    console.log('onSpeechStart: ', e);
-    this.setState({
-      started: '√',
-    });
-  };
-
-  onSpeechRecognized = (e: SpeechRecognizedEvent) => {
-    console.log('onSpeechRecognized: ', e);
-    this.setState({
-      recognized: '√',
-    });
-  };
-
-  onSpeechEnd = (e: any) => {
-    console.log('onSpeechEnd: ', e);
-    this.setState({
-      end: '√',
-    });
-  };
-
-  onSpeechError = (e: SpeechErrorEvent) => {
-    console.log('onSpeechError: ', e);
-    this.setState({
-      error: JSON.stringify(e.error),
-    });
-  };
-
-  onSpeechResults = (e: SpeechResultsEvent) => {
-    console.log('onSpeechResults: ', e);
-    this.setState({
-      results: e.value && e.value?.length > 0 ? e.value : [],
-    });
-  };
-
-  onSpeechPartialResults = (e: SpeechResultsEvent) => {
-    console.log('onSpeechPartialResults: ', e);
-    this.setState({
-      partialResults: e.value && e.value?.length > 0 ? e.value : [],
-    });
-  };
-
-  onSpeechVolumeChanged = (e: any) => {
-    console.log('onSpeechVolumeChanged: ', e);
-    this.setState({
-      pitch: e.value,
-    });
-  };
-
-  _startRecognizing = async () => {
-    this.setState({
-      recognized: '',
-      pitch: '',
-      error: '',
-      started: '',
-      results: [],
-      partialResults: [],
-      end: '',
-    });
-
+  const startRecognizing = async () => {
+    setRecognized('');
+    setError('');
+    setResults([]);
+    setPartialResults([]);
     try {
       await Voice.start('en-US');
     } catch (e) {
@@ -117,118 +35,19 @@ class VoiceTest extends Component<Props, State> {
     }
   };
 
-  _stopRecognizing = async () => {
-    try {
-      await Voice.stop();
-    } catch (e) {
-      console.error(e);
-    }
+  const stopRecognizing = async () => {
+    await Voice.stop();
   };
 
-  _cancelRecognizing = async () => {
-    try {
-      await Voice.cancel();
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  return (
+    <View>
+      <Button title="Start Recognizing" onPress={startRecognizing} />
+      <Button title="Stop Recognizing" onPress={stopRecognizing} />
+      <Text>Results: {results.join(', ')}</Text>
+      <Text>Partial: {partialResults.join(', ')}</Text>
+      {error ? <Text style={{ color: 'red' }}>Error: {error}</Text> : null}
+    </View>
+  );
+};
 
-  _destroyRecognizer = async () => {
-    try {
-      await Voice.destroy();
-    } catch (e) {
-      console.error(e);
-    }
-    this.setState({
-      recognized: '',
-      pitch: '',
-      error: '',
-      started: '',
-      results: [],
-      partialResults: [],
-      end: '',
-    });
-  };
-
-  render() {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>Welcome to React Native Voice!</Text>
-        <Text style={styles.instructions}>
-          Press the button and start speaking.
-        </Text>
-        <Text style={styles.stat}>{`Started: ${this.state.started}`}</Text>
-        <Text style={styles.stat}>{`Recognized: ${
-          this.state.recognized
-        }`}</Text>
-        <Text style={styles.stat}>{`Pitch: ${this.state.pitch}`}</Text>
-        <Text style={styles.stat}>{`Error: ${this.state.error}`}</Text>
-        <Text style={styles.stat}>Results</Text>
-        {this.state.results.map((result, index) => {
-          return (
-            <Text key={`result-${index}`} style={styles.stat}>
-              {result}
-            </Text>
-          );
-        })}
-        <Text style={styles.stat}>Partial Results</Text>
-        {this.state.partialResults.map((result, index) => {
-          return (
-            <Text key={`partial-result-${index}`} style={styles.stat}>
-              {result}
-            </Text>
-          );
-        })}
-        <Text style={styles.stat}>{`End: ${this.state.end}`}</Text>
-        <TouchableHighlight onPress={this._startRecognizing}>
-          <Image style={styles.button} source={require('../../assets/images/button.png')} />
-        </TouchableHighlight>
-        <TouchableHighlight onPress={this._stopRecognizing}>
-          <Text style={styles.action}>Stop Recognizing</Text>
-        </TouchableHighlight>
-        <TouchableHighlight onPress={this._cancelRecognizing}>
-          <Text style={styles.action}>Cancel</Text>
-        </TouchableHighlight>
-        <TouchableHighlight onPress={this._destroyRecognizer}>
-          <Text style={styles.action}>Destroy</Text>
-        </TouchableHighlight>
-      </View>
-    );
-  }
-}
-
-const styles = StyleSheet.create({
-  button: {
-    width: 50,
-    height: 50,
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  action: {
-    textAlign: 'center',
-    color: '#0000FF',
-    marginVertical: 5,
-    fontWeight: 'bold',
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-  stat: {
-    textAlign: 'center',
-    color: '#B0171F',
-    marginBottom: 1,
-  },
-});
-
-export default VoiceTest;
+export default SpeechRecognition;
