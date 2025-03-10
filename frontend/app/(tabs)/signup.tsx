@@ -26,15 +26,19 @@ export default function Example() {
   const [ipAddress, setIpAddress] = useState('');
   const [networkState, setNetworkState] = useState(null);
 
-  // Fetch the device's IP address once the component mounts
   useEffect(() => {
     const getIpAddress = async () => {
-      const ip = await Network.getIpAddressAsync();
-      setIpAddress(ip);
+      try {
+        const ip = await Network.getIpAddressAsync();
+        setIpAddress(ip);
+        console.log('Device IP address:', ip); // Log IP address for debugging
+      } catch (error) {
+        console.error('Failed to get IP address:', error);
+      }
     };
-
     getIpAddress();
-  }, []); // Empty dependency array ensures this runs only once after mount
+  }, []);
+  
 
 
   const handleSignUp = async () => {
@@ -42,9 +46,12 @@ export default function Example() {
       alert("Could not determine IP address. Check network settings.");
       return;
     }
-
+  
+    // Construct the API URL using dynamic IP
+    const apiUrl = `http://${ipAddress}:3000/signup`; // Use dynamic IP for device
+  
     try {
-      const response = await fetch(`http://${ipAddress}:3000/signup`, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,7 +61,7 @@ export default function Example() {
           password: form.password,
         }),
       });
-
+  
       const data = await response.text(); // Handle this based on the API response
       if (response.ok) {
         router.push('/home'); // Navigate to home if signup is successful
@@ -66,6 +73,7 @@ export default function Example() {
       alert('Signup failed. Please try again.');
     }
   };
+  
 
 
   // Function to navigate to the login screen

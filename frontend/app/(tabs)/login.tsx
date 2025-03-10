@@ -28,20 +28,29 @@ export default function Example() {
   // Fetch the device's IP address once the component is mounted
   useEffect(() => {
     const getIpAddress = async () => {
-      const ip = await Network.getIpAddressAsync();
-      setIpAddress(ip);
+      try {
+        const ip = await Network.getIpAddressAsync();
+        setIpAddress(ip);
+        console.log('Device IP address:', ip); // Log IP address for debugging
+      } catch (error) {
+        console.error('Failed to get IP address:', error);
+      }
     };
     getIpAddress();
   }, []);
+  
 
   const handleLogin = async () => {
     if (!ipAddress) {
       alert("Could not determine IP address. Check network settings.");
       return;
     }
-
+  
+    // Ensure that if we are on a physical device, the IP is correct
+    const apiUrl = `http://${ipAddress}:3000/login`; // Use dynamic IP for device
+  
     try {
-      const response = await fetch(`http://${ipAddress}:3000/login`, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,10 +60,10 @@ export default function Example() {
           password: form.password,
         }),
       });
-
+  
       const textResponse = await response.text(); // Get raw text response
       console.log("Response:", textResponse);  // Log the raw response
-
+  
       // Only parse if the response is JSON
       if (response.ok) {
         const data = JSON.parse(textResponse);  // Manually parse if it's JSON
@@ -68,6 +77,7 @@ export default function Example() {
       alert('Login failed. Please try again.');
     }
   };
+  
 
 
 
