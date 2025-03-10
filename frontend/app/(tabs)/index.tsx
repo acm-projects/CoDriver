@@ -1,10 +1,49 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, PermissionsAndroid } from 'react-native';
 import SpeechRecognition from './SpeechRecognition';
 
 export default function HomeScreen() {
-  const [modalVisible, setModalVisible] = useState(true); // Controls pop-up visibility
+  const [modalVisible, setModalVisible] = useState(true);
   const [showSpeechRecognition, setShowSpeechRecognition] = useState(false);
+  const [isSpeechMounted, setIsSpeechMounted] = useState(false);
+  const speechRef = useRef<{ startListening: () => void; stopListening: () => void } | null>(null);
+
+  useEffect(() => {
+    const requestMicrophonePermission = async () => {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: "Microphone Permission",
+            message: "We need access to your microphone for speech recognition.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Deny",
+            buttonPositive: "Allow",
+          }
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          console.log("Microphone permission denied");
+        } else {
+          console.log("Microphone permission granted");
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    };
+
+    requestMicrophonePermission();
+  }, []);
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setShowSpeechRecognition(true);
+  };
+
+  useEffect(() => {
+    if (isSpeechMounted && speechRef.current) {
+      speechRef.current.startListening();
+    }
+  }, [isSpeechMounted]);
 
   return (
     <View style={styles.container}>
@@ -35,24 +74,25 @@ export default function HomeScreen() {
               style={styles.input}
               placeholder="Where are you heading today?"
               placeholderTextColor="rgba(255, 255, 255, 0.6)"
-              onFocus={() => setShowSpeechRecognition(true)} // Show SpeechRecognition when input is focused
             />
 
             <TouchableOpacity style={styles.button}>
               <Text style={styles.buttonText}>I'm feeling lucky!</Text>
-              
             </TouchableOpacity>
+
             <TouchableOpacity 
               style={styles.button} 
-              onPress={() => { 
-                setModalVisible(false); 
-                setShowSpeechRecognition(true); 
-            }}
-          ></TouchableOpacity>
+              onPress={handleCloseModal}
+            >
+              <Text style={styles.buttonText}>Start Voice Recognition</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
-      {showSpeechRecognition && <SpeechRecognition />}
+
+      {showSpeechRecognition && (
+        <SpeechRecognition ref={speechRef} onMounted={() => setIsSpeechMounted(true)} />
+      )}
     </View>
   );
 }
@@ -129,13 +169,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
     textAlignVertical: 'center',
-    //alignSelf: 'center', // Centers inside the popu
   },
   button: {
     backgroundColor: 'black',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
+    marginTop: 10,
   },
   buttonText: {
     color: 'white',
