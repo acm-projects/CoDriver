@@ -3,8 +3,8 @@ const axios = require('axios');
 require('dotenv').config();
 
 // Old DeepSeek configuration
-// const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-// const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+const DEEPSEEK_API_KEY = process.env.CODRIVER1_DEEPSEEK_API_KEY;
+const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
 // New Claude configuration
 const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
@@ -13,29 +13,29 @@ const anthropic = new Anthropic({
 });
 
 class AIController {
-    // Old DeepSeek response method
+    // // Old DeepSeek response method
     // async getDeepSeekResponse(userInput, context = 'general', weatherData = null) {
     //     try {
     //         const systemPrompts = {
     //             general: "You are a friendly driving companion...",
-    //             weather: this.buildWeatherPrompt(weatherData),
+    //             //weather: this.buildWeatherPrompt(weatherData),
     //             jokes: "You are a friendly driving companion who loves telling jokes...",
     //             wordGames: "You are hosting a fun word game...",
     //             trivia: "You are hosting a casual trivia game..."
     //         };
-    //
+    
     //         const messages = [
     //             { role: "system", content: systemPrompts[context] },
     //             { role: "user", content: userInput }
     //         ];
-    //
-    //         if (weatherData) {
-    //             messages.push({
-    //                 role: "system",
-    //                 content: `Current weather context: ${JSON.stringify(weatherData.data)}`
-    //             });
-    //         }
-    //
+    
+            // if (weatherData) {
+            //     messages.push({
+            //         role: "system",
+            //         content: `Current weather context: ${JSON.stringify(weatherData.data)}`
+            //     });
+            // }
+    
     //         const response = await axios.post(
     //             DEEPSEEK_API_URL,
     //             {
@@ -51,7 +51,7 @@ class AIController {
     //                 },
     //             }
     //         );
-    //
+    
     //         return response.data.choices[0].message.content.trim();
     //     } catch (error) {
     //         console.error('Error:', error);
