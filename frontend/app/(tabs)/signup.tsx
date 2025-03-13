@@ -38,7 +38,7 @@ export default function Example() {
     };
     getIpAddress();
   }, []);
-  
+
 
 
   const handleSignUp = async () => {
@@ -46,10 +46,10 @@ export default function Example() {
       alert("Could not determine IP address. Check network settings.");
       return;
     }
-  
+
     // Construct the API URL using dynamic IP
     const apiUrl = `http://${ipAddress}:3000/signup`; // Use dynamic IP for device
-  
+
     try {
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -61,7 +61,7 @@ export default function Example() {
           password: form.password,
         }),
       });
-  
+
       const data = await response.text(); // Handle this based on the API response
       if (response.ok) {
         router.push('/home'); // Navigate to home if signup is successful
@@ -73,7 +73,7 @@ export default function Example() {
       alert('Signup failed. Please try again.');
     }
   };
-  
+
 
 
   // Function to navigate to the login screen

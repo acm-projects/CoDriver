@@ -36,9 +36,10 @@ export default function TabLayout() {
         tabBarStyle: isHiddenScreen
           ? { display: 'none' } // Hide tab bar for login/signup/index
           : {
+            backgroundColor: 'black',
             position: 'absolute',
             flexDirection: 'row',  // Arrange tabs in a row
-            justifyContent: 'space-between',  // Position Home on the left, Settings on the right
+            justifyContent: 'space-around',  // Position Home on the left, Settings on the right
             width: '100%',  // Ensure it spans the full width of the screen
             paddingHorizontal: 20,  // Add padding on the sides
           },
@@ -50,7 +51,7 @@ export default function TabLayout() {
           title: 'Home',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
           tabBarItemStyle: {
-            left: 50, // Adjust this value to move the home icon from the left edge
+            left: 140, // Adjust this value to move the home icon from the left edge
           },
         }}
       />
@@ -61,7 +62,17 @@ export default function TabLayout() {
           title: 'Settings',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
           tabBarItemStyle: {
-            right: -160, // Adjust this value to move the settings icon from the right edge
+            left: 200, // Adjust this value to move the settings icon from the right edge
+          },
+        }}
+      />
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: 'History',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="clock.fill" color={color} />,
+          tabBarItemStyle: {
+            left: -100, // Adjust this value to move the settings icon from the right edge
           },
         }}
       />

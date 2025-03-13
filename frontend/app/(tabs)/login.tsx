@@ -24,6 +24,8 @@ export default function Example() {
   });
 
   const [ipAddress, setIpAddress] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertVisible, setAlertVisible] = useState(false);
 
   // Fetch the device's IP address once the component is mounted
   useEffect(() => {
@@ -38,17 +40,17 @@ export default function Example() {
     };
     getIpAddress();
   }, []);
-  
+
 
   const handleLogin = async () => {
     if (!ipAddress) {
       alert("Could not determine IP address. Check network settings.");
       return;
     }
-  
+
     // Ensure that if we are on a physical device, the IP is correct
     const apiUrl = `http://${ipAddress}:3000/login`; // Use dynamic IP for device
-  
+
     try {
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -60,24 +62,36 @@ export default function Example() {
           password: form.password,
         }),
       });
-  
+
       const textResponse = await response.text(); // Get raw text response
       console.log("Response:", textResponse);  // Log the raw response
-  
+
       // Only parse if the response is JSON
       if (response.ok) {
         const data = JSON.parse(textResponse);  // Manually parse if it's JSON
-        alert(data.message);
+        setAlertMessage(data.message);
+        setAlertVisible(true); // Show success message
+        setTimeout(() => {
+          setAlertVisible(false); // Hide the alert after 3 seconds
+        }, 3000);
         router.push('/home');
       } else {
-        alert(textResponse); // Show raw error response
+        setAlertMessage(textResponse); // Show raw error response
+        setAlertVisible(true);
+        setTimeout(() => {
+          setAlertVisible(false); // Hide the alert after 3 seconds
+        }, 3000);
       }
     } catch (error) {
       console.error('Error during login:', error);
-      alert('Login failed. Please try again.');
+      setAlertMessage('Login failed. Please try again.');
+      setAlertVisible(true);
+      setTimeout(() => {
+        setAlertVisible(false); // Hide the alert after 3 seconds
+      }, 3000);
     }
   };
-  
+
 
 
 
