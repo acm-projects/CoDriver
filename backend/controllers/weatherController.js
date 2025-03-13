@@ -1,6 +1,7 @@
 const axios = require('axios');
 require('dotenv').config();
 
+
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 
 class WeatherController {

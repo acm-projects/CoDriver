@@ -13,6 +13,10 @@ const anthropic = new Anthropic({
 });
 
 class AIController {
+    constructor() {
+        this.lastHazardAnnounced = null;
+    }
+
     // // Old DeepSeek response method
     // async getDeepSeekResponse(userInput, context = 'general', weatherData = null) {
     //     try {
@@ -60,18 +64,20 @@ class AIController {
     // }
 
     // new Claude response method
-    async getClaudeResponse(userInput, context = 'general', weatherData = null) {
+    async getClaudeResponse(userInput, context = 'general', weatherData = null, hazardData = null) {
         try {
-            // added music detection to system prompts YAY
             const systemPrompts = {
                 general: `You are a friendly driving companion. Keep all responses extremely brief (maximum 1-2 short sentences). Be concise but friendly.
                          Recognize if the user wants to control music (play, pause, skip, previous) and respond ONLY with one of these exact commands:
                          MUSIC_PLAY
                          MUSIC_PAUSE
                          MUSIC_NEXT
-                         MUSIC_PREVIOUS`,
+                         MUSIC_PREVIOUS
+                         If the user is tired, offer to play a game or tell a joke.`,
                 
-                weather: this.buildWeatherPrompt(weatherData),
+                weather: this.buildWeatherPrompt(weatherData), 
+                
+                hazard: this.buildHazardPrompt(hazardData),
                 
                 jokes: "You are a friendly driving companion who tells jokes. Keep jokes extremely short and road-appropriate. One-liners are preferred.",
                 
@@ -81,8 +87,13 @@ class AIController {
             };
 
             let messages = `${systemPrompts[context]}\nIMPORTANT: Keep your response under 30 words. For music controls, use ONLY the exact MUSIC_ commands.\n\nHuman: ${userInput}\n\nAssistant:`;
+            
             if (weatherData) {
                 messages = `${systemPrompts[context]}\nCurrent weather context: ${JSON.stringify(weatherData.data)}\nIMPORTANT: Keep your response under 30 words.\n\nHuman: ${userInput}\n\nAssistant:`;
+            }
+
+            if (hazardData) {
+                messages = `${systemPrompts['hazard']}\nIMPORTANT: Keep your response under 30 words and focus on the hazard information.\n\nHuman: ${userInput}\n\nAssistant:`;
             }
 
             const response = await anthropic.messages.create({
@@ -99,7 +110,7 @@ class AIController {
 
             const aiResponse = response.content[0].text;
 
-            // check if the response contains a music command
+            // Handle music commands (existing code)
             const musicCommands = {
                 'MUSIC_PLAY': { endpoint: '/api/music/play', action: 'Playing music' },
                 'MUSIC_PAUSE': { endpoint: '/api/music/pause', action: 'Pausing music' },
@@ -107,9 +118,7 @@ class AIController {
                 'MUSIC_PREVIOUS': { endpoint: '/api/music/previous', action: 'Going to previous track' }
             };
 
-            // check if AI response contains any of the music command
             for (const [command, details] of Object.entries(musicCommands)) {
-              console.log("AI recognized command: " + command);
                 if (aiResponse.includes(command)) {
                     try {
                         await axios.post(`http://localhost:3000${details.endpoint}`);
@@ -140,32 +149,53 @@ class AIController {
                 humidity ${w.humidity}%, wind speed ${w.windSpeed} m/s. 
                 IMPORTANT: Provide this information in a very brief, conversational way (maximum 30 words).
                 Include only the most relevant safety tip if needed.
-                Focus on the most important details only.`;
+                Focus on the most important details only. Say this information conversationally and keep in mind the user is driving.`;
     }
 
-    async handleUserInput(userInput) {
+    buildHazardPrompt(hazardData) {
+        if (!hazardData || !hazardData.type) {
+            return "You are a helpful driving companion. If asked about hazards, explain that you're monitoring the road conditions.";
+        }
+
+        // Don't announce the same hazard twice in a row
+        const hazardKey = `${hazardData.type}-${hazardData.location.lat}-${hazardData.location.lng}`;
+        if (this.lastHazardAnnounced === hazardKey) {
+            return "You are a helpful driving companion. Acknowledge that you're still monitoring the previous hazard.";
+        }
+        this.lastHazardAnnounced = hazardKey;
+
+        return `You are a helpful driving companion alerting about a road hazard.
+                Current hazard: ${hazardData.type} - ${hazardData.description}
+                Distance: ${Math.round(hazardData.distance)} meters ahead
+                Severity: ${hazardData.severity || 'Moderate'}
+                IMPORTANT: Announce this hazard in a calm, clear, and conversational way.
+                Focus on safety and practical advice.
+                Example: "Heads up, there's construction work about 500 meters ahead. Let's slow down a bit."`;
+    }
+
+    async handleUserInput(userInput, hazardData = null) {
         const input = userInput.toLowerCase();
         
-        
+        // If there's hazard data, prioritize announcing it
+        if (hazardData) {
+            return this.getClaudeResponse(userInput, 'hazard', null, hazardData);
+        }
 
-        // detect context from user input
+        // Rest of the existing context detection
         if (input.includes('joke') || input.includes('funny') || input.includes('make me laugh')) {
             return this.getClaudeResponse(userInput, 'jokes');
         }
         
-        // word game triggers
         if (input.includes('play a game') || input.includes('word game') || 
             input.includes('i spy') || input.includes('20 questions')) {
             return this.getClaudeResponse(userInput, 'wordGames');
         }
         
-        // trivia triggers
         if (input.includes('trivia') || input.includes('quiz') || 
             input.includes('test my knowledge')) {
             return this.getClaudeResponse(userInput, 'trivia');
         }
         
-        // default general conversation
         return this.getClaudeResponse(userInput, 'general');
     }
 }

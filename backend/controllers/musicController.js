@@ -69,6 +69,50 @@ class MusicController {
       return { success: false, error: error.message };
     }
   }
+
+  // create a getCurrentSong method that returns the current song artist, album, and title
+  async getCurrentSong() {
+    try {
+      const data = await spotifyApi.getMyCurrentPlayingTrack();
+      
+      if (!data.body || !data.body.item) {
+        return {
+          success: false,
+          error: 'No track currently playing'
+        };
+      }
+
+      const track = data.body.item;
+      return {
+        success: true,
+        data: {
+          title: track.name,
+          artist: track.artists.map(artist => artist.name).join(', '),
+          album: track.album.name,
+          isPlaying: data.body.is_playing,
+          duration: track.duration_ms,
+          progress: data.body.progress_ms
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  //  create a getAlbumCover method 
+  async getAlbumCover() {
+    try {
+      const data = await spotifyApi.getMyCurrentPlayingTrack();
+      return data.body.item.album.images[0].url;
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+  
 }
 
 module.exports = new MusicController();
+
