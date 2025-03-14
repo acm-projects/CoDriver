@@ -29,7 +29,7 @@ export default function HistoryPage() {
               style={styles.waveImage}
             />
           </View>
-          
+
           {/* Title with white text */}
           <View style={styles.titleContainer}>
             <Text style={styles.waveTitle}>History</Text>

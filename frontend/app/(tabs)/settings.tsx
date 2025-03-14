@@ -17,7 +17,7 @@ export default function Example() {
   const [drivingSuggestions, setDrivingSuggestions] = useState(false);
   const router = useRouter();
 
-  const toggleDrivingSuggestions = (value) => {
+  const toggleDrivingSuggestions = (value: boolean) => {
     setDrivingSuggestions(value);
   };
 
@@ -40,7 +40,7 @@ export default function Example() {
       </View>
       <View style={styles.container}>
         <View style={styles.header}>
-          
+
           <MaskedView
             maskElement={<Text style={styles.gradientTitle}>CoDriver</Text>}>
             <LinearGradient colors={['#FF822F', '#FFFFFF']} start={[0, 0]} end={[1, 1]}>
@@ -71,7 +71,7 @@ export default function Example() {
             <Text style={styles.chevronText}>Companion</Text>
             <Ionicons name="chevron-forward" size={18} color="white" />
           </TouchableOpacity>
-          
+
         </View>
         <View style={styles.companionSection}>
           <TouchableOpacity style={styles.chevronButton}>
@@ -219,81 +219,81 @@ const styles = StyleSheet.create({
     marginLeft: 0,
     marginTop: -95
   },
-  
-    
-    gradientTitle: {
-      fontSize: 40,
-      fontWeight: '700',
-      marginBottom: -8,
-      textAlign: 'left',
-      alignSelf: 'flex-start',
-    },
-    
-    
-    
-      
-    formAction: {
-      marginTop: 4,
-      marginBottom: 16,
-    },
-    footerText: {
-      fontSize: 15,
-      fontWeight: '600',
-      color: '#fff',
-      textAlign: 'center',
-      letterSpacing: 0.15,
-    },
-    signUpText: {
-      color: '#FF822F',
-      fontWeight: '600',
-    },
-    loginButtonContainer: {
-      paddingVertical: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    btn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 20,
-      paddingVertical: 6,
-      paddingHorizontal: 14,
-      borderWidth: 1,
-      backgroundColor: '#1ED760',
-      borderColor: '#1ED760',
-    },
-    btnText: {
-      fontSize: 18,
-      lineHeight: 26,
-      fontWeight: '600',
-      color: '#171938',
-    },
-    logOutBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 20,
-      paddingVertical: 6,
-      paddingHorizontal: 14,
-      borderWidth: 1,
-      backgroundColor: '#1E1E1E',
-      borderColor: '#ffffff',
-    },
-    logOutBtnText: {
-      fontSize: 18,
-      lineHeight: 26,
-      fontWeight: '600',
-      color: '#fff',
-    },
-    
-    
-    
-  
-    spotifyLogo: {
-      width: 20,
-      height: 20,
-      marginRight: 10,
-    },
-    
+
+
+  gradientTitle: {
+    fontSize: 40,
+    fontWeight: '700',
+    marginBottom: -8,
+    textAlign: 'left',
+    alignSelf: 'flex-start',
+  },
+
+
+
+
+  formAction: {
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  footerText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+    textAlign: 'center',
+    letterSpacing: 0.15,
+  },
+  signUpText: {
+    color: '#FF822F',
+    fontWeight: '600',
+  },
+  loginButtonContainer: {
+    paddingVertical: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    backgroundColor: '#1ED760',
+    borderColor: '#1ED760',
+  },
+  btnText: {
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: '600',
+    color: '#171938',
+  },
+  logOutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    backgroundColor: '#1E1E1E',
+    borderColor: '#ffffff',
+  },
+  logOutBtnText: {
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: '600',
+    color: '#fff',
+  },
+
+
+
+
+  spotifyLogo: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+  },
+
 });

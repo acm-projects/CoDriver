@@ -1,7 +1,6 @@
 import { Tabs, useSegments, useRootNavigationState } from 'expo-router';
 import React from 'react';
-import { Platform, View } from 'react-native';
-
+import { View, Dimensions } from 'react-native';
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
@@ -10,10 +9,8 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const segments = useSegments(); // Get current route segments
-  const navigationState = useRootNavigationState(); // Ensure navigation is ready
-
-
+  const segments = useSegments();
+  const navigationState = useRootNavigationState();
 
   // Hide tab bar on login, signup, and index pages
   const isHiddenScreen =
@@ -36,53 +33,73 @@ export default function TabLayout() {
         tabBarStyle: isHiddenScreen
           ? { display: 'none' } // Hide tab bar for login/signup/index
           : {
+            flexDirection: 'row', // Ensure icons are laid out in a row (horizontally)
+            justifyContent: 'space-evenly', // This will add space between the icons evenly
             backgroundColor: 'black',
-            position: 'absolute',
-            flexDirection: 'row',  // Arrange tabs in a row
-            justifyContent: 'space-around',  // Position Home on the left, Settings on the right
-            width: '100%',  // Ensure it spans the full width of the screen
-            paddingHorizontal: 20,  // Add padding on the sides
+            bottom: 0,
+            height: 100, // Specify the height to match your original design
+            width: '100%',
+            paddingHorizontal: 0,
+            paddingBottom: 20, // Keep some padding for safe area
           },
-      }}>
-      {/* Home tab positioned on the left */}
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-          tabBarItemStyle: {
-            left: 140, // Adjust this value to move the home icon from the left edge
-          },
-        }}
-      />
-
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
-          tabBarItemStyle: {
-            left: 200, // Adjust this value to move the settings icon from the right edge
-          },
-        }}
-      />
+        tabBarIconStyle: {
+          width: 30,
+          height: 30,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          marginBottom: 5,
+        },
+      }}
+    >
+      {/* History tab */}
       <Tabs.Screen
         name="history"
         options={{
           title: 'History',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="clock.fill" color={color} />,
           tabBarItemStyle: {
-            left: -100, // Adjust this value to move the settings icon from the right edge
+            flex: 17, // Equal flex value for all tabs
+            alignItems: 'center', // Center icons horizontally
+            justifyContent: 'center', // Center the icon vertically
           },
         }}
       />
 
-      {/* Explicitly reference the index screen */}
+      {/* Home tab */}
       <Tabs.Screen
-        name="index"  // This references the index screen
+        name="home"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarItemStyle: {
+            flex: 15, // Equal flex value for all tabs
+            alignItems: 'center', // Center icons horizontally
+            justifyContent: 'center', // Center the icon vertically
+          },
+        }}
+      />
+
+      {/* Settings tab */}
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
+          tabBarItemStyle: {
+            flex: 15, // Equal flex value for all tabs
+            alignItems: 'center', // Center icons horizontally
+            justifyContent: 'center', // Center the icon vertically
+          },
+        }}
+      />
+
+      {/* Hidden screens */}
+      <Tabs.Screen
+        name="index"
         options={{
           title: 'Index',
-          tabBarButton: () => null,  // Optionally hide tab bar button here
+          tabBarButton: () => null,
         }}
       />
 
@@ -90,16 +107,18 @@ export default function TabLayout() {
         name="login"
         options={{
           title: 'Login',
-          tabBarButton: () => null, // Hide the tab button
+          tabBarButton: () => null,
         }}
       />
+
       <Tabs.Screen
         name="signup"
         options={{
           title: 'Signup',
-          tabBarButton: () => null, // Hide the tab button
+          tabBarButton: () => null,
         }}
       />
     </Tabs>
+
   );
 }
