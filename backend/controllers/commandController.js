@@ -3,7 +3,7 @@ const AIController = require('./aiController');
 const WeatherController = require('./weatherController');
 
 class CommandController {
-    async processCommand(userInput) {
+    async processCommand(userInput, sessionId) {
         const input = userInput.toLowerCase();
         
         // some weather command triggers 
@@ -22,6 +22,7 @@ class CommandController {
                 // new Claude call (sm better omg)
                 const aiResponse = await AIController.getClaudeResponse(
                     userInput,
+                    sessionId,
                     'weather',
                     weatherData
                 );
@@ -54,8 +55,9 @@ class CommandController {
 
         // check for music commands first
         for (const [command, action] of Object.entries(musicCommands)) {
-            console.log("recognized a music command (not ai)");
+            
             if (input.includes(command)) {
+                console.log("recognized a music command (not ai)");
                 return await this.musicCommand({ music: action });
             }
         }
@@ -70,7 +72,7 @@ class CommandController {
         // check if input matches any entertainment command
         for (const [category, triggers] of Object.entries(entertainmentTriggers)) {
             if (triggers.some(trigger => input.includes(trigger))) {
-                const aiResponse = await AIController.handleUserInput(userInput);
+                const aiResponse = await AIController.handleUserInput(userInput, sessionId);
                 return {
                     message: `${category.charAt(0).toUpperCase() + category.slice(1)} Response`,
                     response: aiResponse
@@ -80,7 +82,7 @@ class CommandController {
 
         // if no specific command matched, pass to AI for general conversation
         try {
-            const aiResponse = await AIController.handleUserInput(userInput);
+            const aiResponse = await AIController.handleUserInput(userInput, sessionId);
             console.log("ai response received " + aiResponse);
             return {
                 message: 'AI Response',

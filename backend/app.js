@@ -49,20 +49,23 @@ try {
 
 // endpoimt for command controller (music, weather, etc)
 app.post('/command', async (req, res) => {
-  const { command } = req.body;
+  const { command, userInput, sessionId = 'default' } = req.body;
 
-  if (!command) {
-    return res.status(400).json({ error: 'Command is required' });
+  // Handle both command and userInput
+  const inputText = command || userInput;
+
+  if (!inputText) {
+    return res.status(400).json({ error: 'Command or userInput is required' });
   }
 
   try {
-    const response = await commandController.processCommand(command);
+    // Process through command controller which will handle both specific commands and AI conversations
+    const response = await commandController.processCommand(inputText, sessionId);
     res.json(response);
   } catch (error) {
-    console.error('Error processing command:', error);
-    res.status(500).json({ error: 'Failed to process command' });
+    console.error('Error processing command/conversation:', error);
+    res.status(500).json({ error: 'Failed to process request' });
   }
-
 });
 
 // music control routes
