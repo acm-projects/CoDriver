@@ -1,10 +1,5 @@
-for spotify api
-```
-npm install spotify-web-api-node
-```
 
-for anthropic api
+# if it all goes to hell and you have to reclone the repo
 ```
-npm install @anthropic-ai/sdk
+npm install axios body-parser cors express @anthropic-ai/sdk dotenv spotify-web-api-node ws
 ```
-
