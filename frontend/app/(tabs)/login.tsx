@@ -49,7 +49,7 @@ export default function Example() {
     }
 
     // Ensure that if we are on a physical device, the IP is correct
-    const apiUrl = `http://${ipAddress}:3000/login`; // Use dynamic IP for device
+    const apiUrl = `http://${ipAddress}:8000/api/users/login`; // Use dynamic IP for device
 
     try {
       const response = await fetch(apiUrl, {

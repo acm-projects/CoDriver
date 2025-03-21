@@ -48,7 +48,7 @@ export default function Example() {
     }
 
     // Construct the API URL using dynamic IP
-    const apiUrl = `http://${ipAddress}:3000/signup`; // Use dynamic IP for device
+    const apiUrl = `http://${ipAddress}:8000/api/users/register`; // Use dynamic IP for device
 
     try {
       const response = await fetch(apiUrl, {
