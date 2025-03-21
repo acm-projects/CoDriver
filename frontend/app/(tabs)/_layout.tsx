@@ -118,6 +118,14 @@ export default function TabLayout() {
           tabBarButton: () => null,
         }}
       />
+
+<Tabs.Screen
+        name="conversation"
+        options={{
+          title: 'Conversation',
+          tabBarButton: () => null,
+        }}
+      />
     </Tabs>
 
   );
