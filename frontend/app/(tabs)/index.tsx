@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, PermissionsAndroid } from 'react-native';
-import SpeechRecognition from './SpeechRecognition';
+import SpeechRecognition from '../SpeechRecognition';
 
 export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(true);
@@ -43,7 +43,10 @@ export default function HomeScreen() {
     if (isSpeechMounted && speechRef.current) {
       speechRef.current.startListening();
     }
-  }, [isSpeechMounted]);
+    else if (showSpeechRecognition && !speechRef.current){
+      console.log("speechRef.current is null");
+    }
+  }, [showSpeechRecognition, speechRef.current]);
 
   return (
     <View style={styles.container}>
@@ -91,7 +94,7 @@ export default function HomeScreen() {
       </Modal>
 
       {showSpeechRecognition && (
-        <SpeechRecognition ref={speechRef} onMounted={() => setIsSpeechMounted(true)} />
+        <SpeechRecognition ref={speechRef} /*onMounted={() => setIsSpeechMounted(true)}*/ />
       )}
     </View>
   );
@@ -121,8 +124,8 @@ const styles = StyleSheet.create({
   },
   blobImage: {
     position: 'absolute',
-    width: 470,
-    height: 430,
+    width: 500,
+    height: 450,
     top: '25%',
     alignSelf: 'center',
   },

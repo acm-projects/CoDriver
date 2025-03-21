@@ -23,10 +23,10 @@ export default function TabLayout() {
         name="history"  // This must match the file name exactly
         options={{
           title: 'History',
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="time" color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons size={28} name="hourglass-outline" color={color} />,
         }}
       />
-
+      
       <Tabs.Screen
         name="index"
         options={{
