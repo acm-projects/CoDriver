@@ -9,6 +9,7 @@ export default function HomeScreen() {
   const [recognizing, setRecognizing] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [hasPermission, setHasPermission] = useState(false);
+  const [weatherResponse, setWeatherResponse] = useState("");
 
   // Check permissions on component mount
   useEffect(() => {
@@ -52,13 +53,56 @@ export default function HomeScreen() {
       continuous: false,
       requiresOnDeviceRecognition: false,
       addsPunctuation: false,
-      contextualStrings: ["CoDriver", "navigation", "music"],
+      contextualStrings: ["weather", "temperature", "city", "weather in"],
     });
   };
 
+  // Extract city name from transcript (improve this as needed)
+  const extractCityFromTranscript = (transcript: string): string | null => {
+    const regex = /weather in (\w+)/i; // Example: "weather in Dallas"
+    const match = transcript.match(regex);
+    return match ? match[1] : null; // Return the city name if found
+  };
+
+  // Send speech to backend (WeatherController)
+  const sendSpeechToBackend = async () => {
+    if (!transcript) return;
+
+    const city = extractCityFromTranscript(transcript);
+    if (!city) {
+      console.warn("No valid city found in transcript.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://10.0.0.215:8000/weather", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          city: city, // Send only the city name
+        }),
+      });
+
+      const data = await response.json();
+      console.log("Weather Response:", data);
+      setWeatherResponse(data.weather || "No weather response.");
+    } catch (error) {
+      console.error("Error sending speech to backend:", error);
+    }
+  };
+
+  // Call sendSpeechToBackend when speech recognition stops
+  useEffect(() => {
+    if (!recognizing && transcript) {
+      sendSpeechToBackend();
+    }
+  }, [recognizing]);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Speech Recognition</Text>
+      <Text style={styles.header}>Weather Info via Speech Recognition</Text>
 
       {!recognizing ? (
         <Button title="Start Listening" onPress={handleStart} />
@@ -67,8 +111,16 @@ export default function HomeScreen() {
       )}
 
       <ScrollView style={styles.transcriptBox}>
-        <Text style={styles.transcript}>{transcript || "Say something..."}</Text>
+        <Text style={styles.transcript}>
+          {transcript || "Say a city name..."}
+        </Text>
       </ScrollView>
+
+      {weatherResponse && (
+        <ScrollView style={styles.responseBox}>
+          <Text style={styles.response}>{weatherResponse}</Text>
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -86,7 +138,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     marginBottom: 20,
-    marginTop: 50
+    marginTop: 50,
   },
   transcriptBox: {
     marginTop: 20,
@@ -96,6 +148,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   transcript: {
+    fontSize: 18,
+    color: "#fff",
+    textAlign: "center",
+  },
+  responseBox: {
+    marginTop: 20,
+    padding: 10,
+    width: "100%",
+    backgroundColor: "#444",
+    borderRadius: 10,
+  },
+  response: {
     fontSize: 18,
     color: "#fff",
     textAlign: "center",
