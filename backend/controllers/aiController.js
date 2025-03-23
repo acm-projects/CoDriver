@@ -2,11 +2,6 @@ const { Anthropic } = require('@anthropic-ai/sdk');
 const axios = require('axios');
 require('dotenv').config();
 
-// Old DeepSeek configuration
-// const DEEPSEEK_API_KEY = process.env.CODRIVER1_DEEPSEEK_API_KEY;
-// const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
-
-// New Claude configuration
 const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
 const anthropic = new Anthropic({
     apiKey: CLAUDE_API_KEY,
@@ -19,11 +14,9 @@ class AIController {
         this.sessionHistory = {};
     }
 
-
-    // new Claude response method
+    // Claude response method
     async getClaudeResponse(userInput, sessionId, context = 'general', weatherData = null, hazardData = null) {
         try {
-
             if (!sessionId) {
                 console.warn("Warning: sessionId is missing. Using default session.");
                 sessionId = 'default'; // fallback to a default session
@@ -40,37 +33,6 @@ class AIController {
 
             const systemPrompt = this.getSystemPrompt(context, weatherData, hazardData);
             
-            // append system prompt for first message
-            // if (this.sessionHistory[sessionId].length === 0) {
-            //     this.sessionHistory[sessionId].push({
-            //         role: "system",
-            //         content: systemPrompt[context] || "You are a friendly driving companion. Keep responses extremely brief."
-            //     });
-            // }
-            // let messages = `${systemPrompts[context]}\nIMPORTANT: Keep your response under 30 words. For music controls, use ONLY the exact MUSIC_ commands.\n\nHuman: ${userInput}\n\nAssistant:`;
-            
-            // if (weatherData) {
-            //     messages = `${systemPrompts[context]}\nCurrent weather context: ${JSON.stringify(weatherData.data)}\nIMPORTANT: Keep your response under 30 words.\n\nHuman: ${userInput}\n\nAssistant:`;
-            // }
-
-            // if (hazardData) {
-            //     messages = `${systemPrompts['hazard']}\nIMPORTANT: Keep your response under 30 words and focus on the hazard information.\n\nHuman: ${userInput}\n\nAssistant:`;
-            // }
-
-            // append weather/hazard context if applicable
-            // if (weatherData) {
-            //     this.sessionHistory[sessionId].push({
-            //         role: "system",
-            //         content: `Current weather: ${JSON.stringify(weatherData.data)}`
-            //     });
-            // }
-            // if (hazardData) {
-            //     this.sessionHistory[sessionId].push({
-            //         role: "system",
-            //         content: `Hazard alert: ${hazardData.type} - ${hazardData.description}. Keep response under 30 words.`
-            //     });
-            // }
-
             // append user input
             this.sessionHistory[sessionId].push({ role: "user", content: userInput });
 
@@ -85,20 +47,12 @@ class AIController {
                 max_tokens: 50,
                 temperature: 0.8,
                 system: systemPrompt,
-                // messages: [
-                //     {
-                //         role: 'user',
-                //         content: this.sessionHistory[sessionId] // Pass the entire message history
-                //     }
-                // ]
                 messages: this.sessionHistory[sessionId]
             });
 
-            
             const aiResponse = response.content[0].text;
 
             this.sessionHistory[sessionId].push({ role: "assistant", content: aiResponse }); // Save response
-
 
             // handle music commands (existing code)
             const musicCommands = {
@@ -194,7 +148,7 @@ class AIController {
             return this.getClaudeResponse(userInput, sessionId, 'hazard', null, hazardData);
         }
 
-        // Rest of the existing context detection
+        // Rest of the existing context detection for jokes, word games, trivia, etc.
         if (input.includes('joke') || input.includes('funny') || input.includes('make me laugh')) {
             return this.getClaudeResponse(userInput, sessionId, 'jokes');
         }
@@ -208,16 +162,10 @@ class AIController {
             input.includes('test my knowledge')) {
             return this.getClaudeResponse(userInput, sessionId, 'trivia');
         }
-        
+
+        // Default to general AI response for everything else
         return this.getClaudeResponse(userInput, sessionId, 'general');
     }
 }
 
 module.exports = new AIController();
-
-
-// the postman input as a json to http://localhost:3000/conversation or /command
-// {
-//     "userInput": "Lets play a game"
-  
-//   }

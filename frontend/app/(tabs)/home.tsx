@@ -9,7 +9,7 @@ export default function HomeScreen() {
   const [recognizing, setRecognizing] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [hasPermission, setHasPermission] = useState(false);
-  const [weatherResponse, setWeatherResponse] = useState("");
+  const [response, setResponse] = useState(""); // For both AI and Weather responses
 
   // Check permissions on component mount
   useEffect(() => {
@@ -53,43 +53,62 @@ export default function HomeScreen() {
       continuous: false,
       requiresOnDeviceRecognition: false,
       addsPunctuation: false,
-      contextualStrings: ["weather", "temperature", "city", "weather in"],
+      contextualStrings: ["weather", "temperature", "city", "weather in", "ai", "chat", "conversation"],
     });
   };
 
-  // Extract city name from transcript (improve this as needed)
+  // Function to extract city from transcript
   const extractCityFromTranscript = (transcript: string): string | null => {
     const regex = /weather in (\w+)/i; // Example: "weather in Dallas"
     const match = transcript.match(regex);
     return match ? match[1] : null; // Return the city name if found
   };
 
-  // Send speech to backend (WeatherController)
+  // Function to send the transcript to the appropriate backend
   const sendSpeechToBackend = async () => {
     if (!transcript) return;
 
+    // Check if the transcript is a weather query (contains "weather in")
     const city = extractCityFromTranscript(transcript);
-    if (!city) {
-      console.warn("No valid city found in transcript.");
-      return;
-    }
 
-    try {
-      const response = await fetch("http://10.0.0.215:8000/weather", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          city: city, // Send only the city name
-        }),
-      });
+    if (city) {
+      // If city found, send the weather request to the backend
+      try {
+        const response = await fetch("http://10.0.0.215:8000/weather", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            city: city, // Send only the city name
+          }),
+        });
 
-      const data = await response.json();
-      console.log("Weather Response:", data);
-      setWeatherResponse(data.weather || "No weather response.");
-    } catch (error) {
-      console.error("Error sending speech to backend:", error);
+        const data = await response.json();
+        console.log("Weather Response:", data);
+        setResponse(data.weather || "No weather response.");
+      } catch (error) {
+        console.error("Error sending speech to backend:", error);
+      }
+    } else {
+      // Otherwise, treat it as a general AI conversation
+      try {
+        const response = await fetch("http://10.0.0.215:8000/conversation", {  // Replace with your actual IP address
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userInput: transcript, // Send the full transcript as user input
+          }),
+        });
+
+        const data = await response.json();
+        console.log("AI Response:", data);
+        setResponse(data.aiResponse || "No response from AI.");
+      } catch (error) {
+        console.error("Error sending speech to AI:", error);
+      }
     }
   };
 
@@ -102,7 +121,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Weather Info via Speech Recognition</Text>
+      <Text style={styles.header}>Voice Input for Weather and AI</Text>
 
       {!recognizing ? (
         <Button title="Start Listening" onPress={handleStart} />
@@ -112,13 +131,13 @@ export default function HomeScreen() {
 
       <ScrollView style={styles.transcriptBox}>
         <Text style={styles.transcript}>
-          {transcript || "Say a city name..."}
+          {transcript || "Say something to chat with AI or ask for weather..."}
         </Text>
       </ScrollView>
 
-      {weatherResponse && (
+      {response && (
         <ScrollView style={styles.responseBox}>
-          <Text style={styles.response}>{weatherResponse}</Text>
+          <Text style={styles.response}>{response}</Text>
         </ScrollView>
       )}
     </View>
