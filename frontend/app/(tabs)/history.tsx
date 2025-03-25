@@ -37,22 +37,22 @@ export default function HistoryPage() {
         </View>
 
         <View style={styles.historyContainer}>
-        {trips.map((trip, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.btn}
-            onPress={() => router.push(`../conversation?tripTitle=${encodeURIComponent(trip.name)}`)}
-          >
-            <View style={styles.tripContainer}>
-              <Text style={styles.btnText}>{trip.name}</Text>
-              <View style={styles.dateTimeContainer}>
-                <Text style={styles.dateText}>{trip.date}</Text>
-                <Text style={styles.timeText}>{trip.time}</Text>
+          {trips.map((trip, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.btn}
+              onPress={() => router.push(`../conversation?tripTitle=${encodeURIComponent(trip.name)}`)}
+            >
+              <View style={styles.tripContainer}>
+                <Text style={styles.btnText}>{trip.name}</Text>
+                <View style={styles.dateTimeContainer}>
+                  <Text style={styles.dateText}>{trip.date}</Text>
+                  <Text style={styles.timeText}>{trip.time}</Text>
+                </View>
               </View>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <View style={styles.formAction}>
           <TouchableOpacity onPress={() => console.log('Companion Chat History pressed')}>

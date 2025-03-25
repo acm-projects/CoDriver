@@ -13,7 +13,7 @@ class CommandController {
 
         if (weatherTriggers.some(trigger => input.includes(trigger))) {
             try {
-                const city = WeatherController.extractCity(userInput);
+                const city = this.extractCity(userInput); // Calling the extractCity method
                 const weatherData = await WeatherController.getWeather(city);
                 
                 // old DeepSeek call
@@ -37,7 +37,7 @@ class CommandController {
             }
         }
 
-        // check if it's a music command 
+        // Check if it's a music command
         const musicCommands = {
             'play music': { play: true },
             'pause music': { pause: true },
@@ -46,30 +46,24 @@ class CommandController {
             'previous song': { previous: true },
             'play next': { next: true },
             'play previous': { previous: true },
-            // 'pause': { pause: true },
-            // 'next': { next: true },
-            // 'skip': { skip: true },
-            // 'previous': { previous: true },
-            // 'back': { previous: true }
         };
 
-        // check for music commands first
+        // Check for music commands first
         for (const [command, action] of Object.entries(musicCommands)) {
-            
             if (input.includes(command)) {
                 console.log("recognized a music command (not ai)");
                 return await this.musicCommand({ music: action });
             }
         }
 
-        // entertainment commands
+        // Entertainment commands
         const entertainmentTriggers = {
             jokes: ['tell me a joke', 'make me laugh', 'know any jokes'],
-            games: ["let's play a game', 'play word game', 'i spy', '20 questions"],
-            trivia: ["let's play trivia', 'quiz me', 'test my knowledge"]
+            games: ["let's play a game", 'play word game', 'i spy', '20 questions'],
+            trivia: ["let's play trivia", 'quiz me', 'test my knowledge']
         };
 
-        // check if input matches any entertainment command
+        // Check if input matches any entertainment command
         for (const [category, triggers] of Object.entries(entertainmentTriggers)) {
             if (triggers.some(trigger => input.includes(trigger))) {
                 const aiResponse = await AIController.handleUserInput(userInput, sessionId);
@@ -80,7 +74,7 @@ class CommandController {
             }
         }
 
-        // if no specific command matched, pass to AI for general conversation
+        // If no specific command matched, pass to AI for general conversation
         try {
             const aiResponse = await AIController.handleUserInput(userInput, sessionId);
             console.log("ai response received " + aiResponse);
@@ -98,7 +92,7 @@ class CommandController {
         try {
             if (!music) return null;
             console.log("music command received");
-            // keyword was recognized and is now matched to route
+            // Keyword was recognized and is now matched to route
             if ('play' in music) {
                 const response = await axios.post('http://localhost:3000/api/music/play');
                 return response.data;
@@ -118,6 +112,17 @@ class CommandController {
             console.error('Error processing music command:', error);
             return { error: 'Failed to process music command' };
         }
+    }
+
+    // Function to extract city from user input
+    extractCity(userInput) {
+        // Regex pattern to match "weather in [city]" or similar variations
+        const cityRegex = /weather\s+in\s+([a-zA-Z\s]+)/i;
+        const match = userInput.match(cityRegex);
+        if (match && match[1]) {
+            return match[1].trim(); // Return the city part of the input
+        }
+        return 'Dallas';  // Default to Dallas if no city is found
     }
 }
 
