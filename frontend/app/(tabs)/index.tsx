@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, PermissionsAndroid } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Modal,
+  PermissionsAndroid,
+  Animated,
+  Easing,
+} from 'react-native';
+import * as Speech from 'expo-speech';
 import SpeechRecognition from '../SpeechRecognition';
 
 export default function HomeScreen() {
@@ -8,23 +20,26 @@ export default function HomeScreen() {
   const [isSpeechMounted, setIsSpeechMounted] = useState(false);
   const speechRef = useRef<{ startListening: () => void; stopListening: () => void } | null>(null);
 
+  const rippleAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(0.5)).current;
+
   useEffect(() => {
     const requestMicrophonePermission = async () => {
       try {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
           {
-            title: "Microphone Permission",
-            message: "We need access to your microphone for speech recognition.",
-            buttonNeutral: "Ask Me Later",
-            buttonNegative: "Deny",
-            buttonPositive: "Allow",
+            title: 'Microphone Permission',
+            message: 'We need access to your microphone for speech recognition.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Deny',
+            buttonPositive: 'Allow',
           }
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          console.log("Microphone permission denied");
+          console.log('Microphone permission denied');
         } else {
-          console.log("Microphone permission granted");
+          console.log('Microphone permission granted');
         }
       } catch (err) {
         console.warn(err);
@@ -34,24 +49,40 @@ export default function HomeScreen() {
     requestMicrophonePermission();
   }, []);
 
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setShowSpeechRecognition(true);
+  const triggerRipple = () => {
+    rippleAnim.setValue(0);
+    opacityAnim.setValue(0.5);
+
+    Animated.parallel([
+      Animated.timing(rippleAnim, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
   };
 
-  useEffect(() => {
-    if (isSpeechMounted && speechRef.current) {
-      speechRef.current.startListening();
-    }
-    else if (showSpeechRecognition && !speechRef.current){
-      console.log("speechRef.current is null");
-    }
-  }, [showSpeechRecognition, speechRef.current]);
+  const handleImagePress = () => {
+    triggerRipple();
+    const thingToSay = 'Hello! I am CoDriver, your personalized AI driving assistant!';
+    Speech.speak(thingToSay);
+  };
+
+  const rippleScale = rippleAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 4],
+  });
 
   return (
     <View style={styles.container}>
       <View style={styles.topLeftContainer}>
-        <Image 
+        <Image
           source={require('../../assets/images/codriver_logo.png')}
           style={styles.logoImage}
           resizeMode="contain"
@@ -59,11 +90,23 @@ export default function HomeScreen() {
         <Text style={styles.topLeftText}>CoDriver</Text>
       </View>
 
-      <Image
-        source={require('../../assets/images/AI_Blob.png')}
-        style={styles.blobImage}
-        resizeMode="contain"
-      />
+      {/* Clickable Image with Ripple Effect */}
+      <TouchableOpacity onPress={handleImagePress} activeOpacity={0.7}>
+        <Animated.View
+          style={[
+            styles.ripple,
+            {
+              transform: [{ scale: rippleScale }],
+              opacity: opacityAnim,
+            },
+          ]}
+        />
+        <Image
+          source={require('../../assets/images/AI_Blob.png')}
+          style={styles.blobImage}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
 
       <Modal transparent={true} visible={modalVisible} animationType="fade">
         <View style={styles.modalContainer}>
@@ -73,7 +116,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
 
             <Text style={styles.popupTitle}>Hello User</Text>
-            <TextInput 
+            <TextInput
               style={styles.input}
               placeholder="Where are you heading today?"
               placeholderTextColor="rgba(255, 255, 255, 0.6)"
@@ -83,19 +126,14 @@ export default function HomeScreen() {
               <Text style={styles.buttonText}>I'm feeling lucky!</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.button} 
-              onPress={handleCloseModal}
-            >
+            <TouchableOpacity style={styles.button} onPress={() => setModalVisible(false)}>
               <Text style={styles.buttonText}>Start Voice Recognition</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {showSpeechRecognition && (
-        <SpeechRecognition ref={speechRef} /*onMounted={() => setIsSpeechMounted(true)}*/ />
-      )}
+      {showSpeechRecognition && <SpeechRecognition ref={speechRef} />}
     </View>
   );
 }
@@ -113,21 +151,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoImage: {
-    width: 40,
-    height: 40,
+    width: 52,
+    height: 52,
     marginRight: 8,
   },
   topLeftText: {
     color: 'white',
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
   },
   blobImage: {
     position: 'absolute',
-    width: 500,
-    height: 450,
-    top: '25%',
-    alignSelf: 'center',
+    width: 550, 
+    height: 550, 
+    alignSelf: 'center',  
+    top: '50%',  // Moves it closer to the vertical center
+    transform: [{ translateY: 100 }], // Offsets half of its height for true centering
+  },
+  ripple: {
+    position: 'absolute',
+    width: 800, 
+    height: 800, 
+    alignSelf: 'center',  
+    top: '50%',  // Moves it closer to the vertical center
+    transform: [{ translateY: 150 }], // Offsets half of its height for true centering
   },
   modalContainer: {
     flex: 1,
@@ -185,3 +232,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+

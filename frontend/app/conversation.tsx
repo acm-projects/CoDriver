@@ -1,6 +1,6 @@
 // app/conversation.tsx
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, StatusBar } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 
 const mockConversation = [
@@ -16,9 +16,11 @@ const mockConversation = [
 
 const ChatDetailScreen = () => {
   const { tripTitle } = useLocalSearchParams();
-
+<StatusBar backgroundColor="#000" barStyle="light-content" />
   return (
     <View style={styles.container}>
+      <StatusBar hidden={true} />
+      <Text style={styles.title}>{tripTitle}</Text>
       <Text style={styles.title}>{tripTitle}</Text>
       <FlatList
         data={mockConversation}
