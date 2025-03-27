@@ -10,6 +10,7 @@ import {
   PermissionsAndroid,
   Animated,
   Easing,
+  ActivityIndicator,
 } from 'react-native';
 import * as Speech from 'expo-speech';
 import SpeechRecognition from '../SpeechRecognition';
@@ -18,8 +19,9 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(true);
   const [showSpeechRecognition, setShowSpeechRecognition] = useState(false);
   const [isSpeechMounted, setIsSpeechMounted] = useState(false);
-  const speechRef = useRef<{ startListening: () => void; stopListening: () => void } | null>(null);
+  const [loading, setLoading] = useState(false); // Added for loading indicator
 
+  const speechRef = useRef<{ startListening: () => void; stopListening: () => void } | null>(null);
   const rippleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0.5)).current;
 
@@ -68,16 +70,25 @@ export default function HomeScreen() {
     ]).start();
   };
 
-  const handleImagePress = () => {
+  const fetchAndSpeak = async () => {
+    setLoading(true);
     triggerRipple();
-    const thingToSay = 'Hello! I am CoDriver, your personalized AI driving assistant!';
-    Speech.speak(thingToSay);
-  };
 
-  const rippleScale = rippleAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 4],
-  });
+    try {
+      const response = await fetch('YOUR_BACKEND_API_URL'); // Replace with your actual backend URL
+      const data = await response.json();
+
+      if (data.text) {
+        Speech.speak(data.text);
+      } else {
+        console.log("No text received from backend.");
+      }
+    } catch (error) {
+      console.error("Error fetching text:", error);
+    }
+
+    setLoading(false);
+  };
 
   return (
     <View style={styles.container}>
@@ -91,12 +102,12 @@ export default function HomeScreen() {
       </View>
 
       {/* Clickable Image with Ripple Effect */}
-      <TouchableOpacity onPress={handleImagePress} activeOpacity={0.7}>
+      <TouchableOpacity onPress={fetchAndSpeak} activeOpacity={0.7} disabled={loading}>
         <Animated.View
           style={[
             styles.ripple,
             {
-              transform: [{ scale: rippleScale }],
+              transform: [{ scale: rippleAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 4] }) }],
               opacity: opacityAnim,
             },
           ]}
@@ -107,6 +118,8 @@ export default function HomeScreen() {
           resizeMode="contain"
         />
       </TouchableOpacity>
+
+      {loading && <ActivityIndicator size="large" color="white" style={styles.loader} />}
 
       <Modal transparent={true} visible={modalVisible} animationType="fade">
         <View style={styles.modalContainer}>
@@ -122,13 +135,10 @@ export default function HomeScreen() {
               placeholderTextColor="rgba(255, 255, 255, 0.6)"
             />
 
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity style={styles.button} onPress={() => setModalVisible(false)}>
               <Text style={styles.buttonText}>I'm feeling lucky!</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.button} onPress={() => setModalVisible(false)}>
-              <Text style={styles.buttonText}>Start Voice Recognition</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -162,19 +172,19 @@ const styles = StyleSheet.create({
   },
   blobImage: {
     position: 'absolute',
-    width: 550, 
-    height: 550, 
-    alignSelf: 'center',  
-    top: '50%',  // Moves it closer to the vertical center
-    transform: [{ translateY: 100 }], // Offsets half of its height for true centering
+    width: 550,
+    height: 550,
+    alignSelf: 'center',
+    top: '50%',  
+    transform: [{ translateY: 100 }], 
   },
   ripple: {
     position: 'absolute',
-    width: 800, 
-    height: 800, 
-    alignSelf: 'center',  
-    top: '50%',  // Moves it closer to the vertical center
-    transform: [{ translateY: 150 }], // Offsets half of its height for true centering
+    width: 800,
+    height: 800,
+    alignSelf: 'center',
+    top: '50%',  
+    transform: [{ translateY: 150 }], 
   },
   modalContainer: {
     flex: 1,
@@ -231,5 +241,8 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
   },
+  loader: {
+    position: 'absolute',
+    bottom: 50,
+  },
 });
-
