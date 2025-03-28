@@ -96,10 +96,11 @@ export default function HomeScreen() {
 
   // Call sendSpeechToBackend when speech recognition stops and transcript is available
   useEffect(() => {
-    if (!recognizing && transcript) {
+    if (transcript) {
       sendSpeechToBackend();
     }
-  }, [recognizing, transcript]);
+  }, [transcript]); 
+  
 
   return (
     <View style={styles.container}>

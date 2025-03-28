@@ -44,7 +44,7 @@ class WeatherController {
         }
 
         const w = weatherData.data;
-        console.log(`Formatted weather response: ${w.city} - ${w.description} with temperature ${w.temperature}°C`);
+        //console.log(`Formatted weather response: ${w.city} - ${w.description} with temperature ${w.temperature}°C`);
 
         return `The current weather in ${w.city} is ${w.description} with a temperature of ${w.temperature}°C. ` +
                `It feels like ${w.feelsLike}°C, with ${w.humidity}% humidity and wind speed of ${w.windSpeed} m/s.`;

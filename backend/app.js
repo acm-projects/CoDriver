@@ -158,7 +158,7 @@ app.post("/weather", async (req, res) => {
     // Fetch weather data from WeatherController
     const weatherData = await WeatherController.getWeather(city);
     
-    console.log("Weather data fetched:", weatherData);
+    //console.log("Weather data fetched:", weatherData);
 
     if (!weatherData.success) {
       console.error("Failed to fetch weather data:", weatherData);
