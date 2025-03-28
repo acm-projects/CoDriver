@@ -97,13 +97,13 @@ class HazardController extends EventEmitter {
 
     async getNearbyRoads(position) {
         try {
-            // Handle string format position (convert to object)
+            // handle string format position (convert to object)
             if (typeof position === 'string') {
                 const [lat, lng] = position.split(',').map(Number);
                 position = { lat, lng };
             }
 
-            // Validate position
+            // validate da position
             if (!position || typeof position.lat !== 'number' || typeof position.lng !== 'number') {
                 console.log('Invalid position provided for nearby roads:', position);
                 return [];
@@ -144,7 +144,7 @@ class HazardController extends EventEmitter {
 
     async getTrafficData(snappedPoints) {
         try {
-            // Check if we have valid snapped points
+            // check if we have valid snapped points
             if (!snappedPoints || snappedPoints.length === 0) {
                 console.log('No valid snapped points for traffic data');
                 return { incidents: [] };
@@ -192,12 +192,12 @@ class HazardController extends EventEmitter {
     }
 
     generatePointsAroundPosition(position, radius) {
-        // Generate points in a square around the position
+        // generate points in a square around the position
         const points = [];
         const latStep = radius / 111320; // 1 degree latitude ≈ 111.32 km
         const lngStep = radius / (111320 * Math.cos(position.lat * Math.PI / 180));
 
-        // Generate points centered on the actual position
+        // generate points centered on the actual position
         points.push(position); // Include the center point
         points.push({ lat: position.lat + latStep, lng: position.lng + lngStep });
         points.push({ lat: position.lat + latStep, lng: position.lng - lngStep });
