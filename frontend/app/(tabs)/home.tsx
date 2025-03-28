@@ -7,9 +7,16 @@ import {
 } from "expo-speech-recognition";
 import { Text, TextInput, TouchableOpacity, Image, Modal } from 'react-native';
 
+import {
+  Animated,
+  Easing,
+} from 'react-native';
+import * as Speech from 'expo-speech';
+
 export default function HomeScreen() {
   const [recognizing, setRecognizing] = useState(true); // Start in recognizing state
   const [transcript, setTranscript] = useState("");
+  const [backendResponse, setBackendResponse] = useState(""); // New state for backend response
   const [hasPermission, setHasPermission] = useState(false);
   const [loading, setLoading] = useState(false); // Track loading state for backend calls
 
@@ -18,6 +25,23 @@ export default function HomeScreen() {
     checkPermissions();
     startListening(); // Start listening as soon as the component mounts
   }, []);
+
+  // New useEffect to handle text-to-speech for backend response
+  useEffect(() => {
+    if (backendResponse) {
+      // Use Expo Speech to speak the backend response
+      Speech.speak(backendResponse, {
+        rate: 0.8, // Optional: Adjust speech rate (0.1 to 1.0)
+        pitch: 1.0, // Optional: Adjust pitch (0.5 to 2.0)
+        language: 'en-US' // Optional: Specify language
+      });
+    }
+  }, [backendResponse]);
+
+  const handleTextToSpeech = () => {
+    const thingToSay = transcript;
+    Speech.speak(thingToSay);
+  };
 
   const checkPermissions = async () => {
     const { status, granted } = await ExpoSpeechRecognitionModule.getPermissionsAsync();
@@ -86,9 +110,13 @@ export default function HomeScreen() {
         sessionId: 'unique-session-id', // Optional session ID
       });
 
-      console.log("Backend response:", response.data); // Output to console
+      console.log("Backend response:", response.data);
+      
+      // Set the backend response text
+      setBackendResponse(response.data.text || response.data.message || "No response received");
     } catch (error) {
       console.error("Error sending speech to backend:", error);
+      setBackendResponse("Sorry, there was an error processing your request.");
     } finally {
       setLoading(false); // Stop loading
     }
@@ -100,7 +128,6 @@ export default function HomeScreen() {
       sendSpeechToBackend();
     }
   }, [transcript]); 
-  
 
   return (
     <View style={styles.container}>
@@ -170,12 +197,7 @@ export default function HomeScreen() {
           style={styles.blobImage}
           resizeMode="contain"
         />
-
-        {/* Text on top of the image */}
-
       </View>
-
-
 
       {/* Destination Button at the bottom */}
       <TouchableOpacity style={styles.destinationButton}>
@@ -204,7 +226,6 @@ export default function HomeScreen() {
         onPress={toggleMute}
       >
         <View style={styles.leftSection3}>
-
         </View>
         <View style={styles.rightSection3}>
           <Text style={styles.destinationTabText2} numberOfLines={1}>
@@ -212,8 +233,6 @@ export default function HomeScreen() {
           </Text>
         </View>
       </TouchableOpacity>
-
-
     </View>
   );
 }
