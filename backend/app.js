@@ -66,6 +66,7 @@ app.post('/command', async (req, res) => {
     console.error('Error processing command/conversation:', error);
     res.status(500).json({ error: 'Failed to process request' });
   }
+  
 });
 
 // music control routes
@@ -127,13 +128,75 @@ app.get('/api/directions', async (req, res) => {
   }
 });
 
+// new endpoint to handle location simulation
+app.post('/api/simulation/location', (req, res) => {
+  const { lat, lng, accuracy } = req.body;
+  
+  if (typeof lat !== 'number' || typeof lng !== 'number') {
+    return res.status(400).json({ error: 'Latitude and longitude are required numbers' });
+  }
 
-// app.listen(port, () => {
-//   console.log(`Server running on http://localhost:${port}`);
-// });
+  try {
+    NavigationController.updateSimulatedPosition({ lat, lng, accuracy });
+    res.json({ message: 'Location updated successfully' });
+  } catch (error) {
+    console.error('Error updating simulated location:', error);
+    res.status(500).json({ error: 'Failed to update location' });
+  }
+});
 
+// new endpoint to enable/disable simulation mode
+app.post('/api/simulation/mode', (req, res) => {
+  const { enabled } = req.body;
+  
+  if (typeof enabled !== 'boolean') {
+    return res.status(400).json({ error: 'Enabled parameter must be a boolean' });
+  }
 
+  try {
+    if (enabled) {
+      NavigationController.enableSimulationMode();
+    } else {
+      NavigationController.disableSimulationMode();
+    }
+    res.json({ message: `Simulation mode ${enabled ? 'enabled' : 'disabled'} successfully` });
+  } catch (error) {
+    console.error('Error toggling simulation mode:', error);
+    res.status(500).json({ error: 'Failed to toggle simulation mode' });
+  }
+});
 
+// Add this new route to your Express app
+app.post('/api/navigation/generate-route', async (req, res) => {
+    try {
+        const { origin, destination } = req.body;
+        if (!origin || !destination) {
+            return res.status(400).json({ error: 'Origin and destination are required' });
+        }
+
+        const points = await NavigationController.generateRoutePoints(origin, destination);
+        res.json({ points });
+    } catch (error) {
+        console.error('Error generating route points:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add this route to your Express app
+app.post('/api/navigation/start', async (req, res) => {
+    try {
+        const { origin, destination } = req.body;
+        if (!origin || !destination) {
+            return res.status(400).json({ error: 'Origin and destination are required' });
+        }
+
+        const result = await NavigationController.startNavigation(origin, destination);
+        res.json(result);
+    } catch (error) {
+        console.error('Error starting navigation:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // set up WebSocket connection
 wss.on('connection', (ws) => {
@@ -210,12 +273,103 @@ wss.on('connection', (ws) => {
     });
 
     // handle navigation events
-    NavigationController.on('newInstruction', (instruction) => {
+    // NavigationController.on('newInstruction', async (instruction) => {
+    //     if (ws.readyState === WebSocket.OPEN) {
+    //         // try {
+    //         //     // Format the instruction using AI controller
+    //         //     const formattedInstruction = await AIController.formatNavigationInstruction(instruction);
+    //         //     ws.send(JSON.stringify({
+    //         //         type: 'instruction',
+    //         //         data: {
+    //         //             ...formattedInstruction,
+    //         //             timestamp: new Date().toISOString(),
+    //         //             stepNumber: NavigationController.currentStepIndex + 1,
+    //         //             totalSteps: NavigationController.currentRoute.length
+    //         //         }
+    //         //     }));
+    //         // } catch (error) {
+    //         //     console.error('Error formatting navigation instruction:', error);
+    //         //     // Fallback to original instruction if formatting fails
+    //         //     ws.send(JSON.stringify({
+    //         //         type: 'instruction',
+    //         //         data: {
+    //         //             ...instruction,
+    //         //             timestamp: new Date().toISOString(),
+    //         //             stepNumber: NavigationController.currentStepIndex + 1,
+    //         //             totalSteps: NavigationController.currentRoute.length
+    //         //         }
+    //         //     }));
+    //         // }
+
+    //         try {
+    //           ws.send(JSON.stringify({
+    //             type: 'instruction',
+    //             data: {
+    //               ...instruction,
+    //               timestamp: new Date().toISOString(),
+    //             }
+    //           }));
+    //         } catch (error) {
+    //           console.error('Error sending instruction:', error);
+    //         }
+    //     }
+    // });
+    NavigationController.on('newInstruction', async (instruction) => {
+      try {
+        ws.send(JSON.stringify({
+          type: 'instruction',
+          data: {
+            ...instruction,
+          }
+        }));
+      } catch (error) {
+        console.error('Error sending instruction:', error);
+      }
+    });
+
+    NavigationController.on('approachingTurn', async (event) => {
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-                type: 'instruction',
-                data: instruction
-            }));
+            // try {
+            //     // Format the approaching turn instruction using AI controller
+            //     const formattedInstruction = await AIController.formatNavigationInstruction({
+            //         instruction: `Approaching turn: ${event.instruction.instruction} (${event.distance}m away)`,
+            //         distance: event.distance,
+            //         duration: 'coming up soon'
+            //     });
+            //     ws.send(JSON.stringify({
+            //         type: 'approachingTurn',
+            //         data: {
+            //             ...event,
+            //             instruction: formattedInstruction.instruction,
+            //             timestamp: new Date().toISOString(),
+            //             stepNumber: NavigationController.currentStepIndex + 1,
+            //             totalSteps: NavigationController.currentRoute.length
+            //         }
+            //     }));
+            // } catch (error) {
+            //     console.error('Error formatting approaching turn instruction:', error);
+            //     // Fallback to original instruction if formatting fails
+            //     ws.send(JSON.stringify({
+            //         type: 'approachingTurn',
+            //         data: {
+            //             ...event,
+            //             timestamp: new Date().toISOString(),
+            //             stepNumber: NavigationController.currentStepIndex + 1,
+            //             totalSteps: NavigationController.currentRoute.length
+            //         }
+            //     }));
+            // }
+
+            try {
+              ws.send(JSON.stringify({
+                type: 'approachingTurn',
+                data: {
+                  ...event,
+                }
+              }));
+            } catch (error) {
+              console.error('Error sending approaching turn:', error);
+            }
         }
     });
 
@@ -223,7 +377,10 @@ wss.on('connection', (ws) => {
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
                 type: 'complete',
-                message: 'You have reached your destination'
+                data: {
+                    message: "Great job! You've reached your destination, slay",
+                    timestamp: new Date().toISOString()
+                }
             }));
         }
         // stop hazard monitoring when navigation is complete
@@ -260,6 +417,47 @@ app.get('/api/hazards/current', async (req, res) => {
     }
     const result = await hazardController.getCurrentHazards({ lat: parseFloat(lat), lng: parseFloat(lng) });
     res.json(result);
+});
+
+// Add these routes to your Express app
+app.post('/api/simulation/enable', (req, res) => {
+    try {
+        NavigationController.isSimulationMode = true;
+        console.log('Simulation mode enabled');
+        res.json({ message: 'Simulation mode enabled' });
+    } catch (error) {
+        console.error('Error enabling simulation mode:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/simulation/location', (req, res) => {
+    try {
+        const { lat, lng } = req.body;
+        if (!lat || !lng) {
+            return res.status(400).json({ error: 'Latitude and longitude are required' });
+        }
+        
+        NavigationController.updateSimulatedPosition({ lat: Number(lat), lng: Number(lng) });
+        res.json({ message: 'Location updated' });
+    } catch (error) {
+        console.error('Error updating simulated location:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+
+
+
+
+
+
+// simulation test route
+app.post('/api/simulation/test', (req, res) => {
+  const { origin, destination } = req.body;
+  NavigationController.startNavigationTest(origin, destination);
+  res.json({ message: 'Simulation test started' });
 });
 
 server.listen(port, () => {

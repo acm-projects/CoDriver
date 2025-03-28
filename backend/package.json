@@ -8,5 +8,8 @@
     "express": "^4.21.2",
     "spotify-web-api-node": "^5.0.2",
     "ws": "^8.18.1"
-  }
+  },
+  "scripts": {
+    "start": "node app.js & node test_navigation.js"
+    }
 }
