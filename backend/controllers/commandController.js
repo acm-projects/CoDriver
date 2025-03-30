@@ -3,7 +3,7 @@ const AIController = require('./aiController');
 const WeatherController = require('./weatherController');
 
 class CommandController {
-    async processCommand(userInput, sessionId) {
+    async processCommand(userInput, sessionId, city) {
         const input = userInput.toLowerCase();
         
         // some weather command triggers 
@@ -13,7 +13,7 @@ class CommandController {
 
         if (weatherTriggers.some(trigger => input.includes(trigger))) {
             try {
-                const city = WeatherController.extractCity(userInput);
+                //const city = WeatherController.extractCity(userInput);
                 const weatherData = await WeatherController.getWeather(city);
                 
                 // old DeepSeek call

@@ -6,7 +6,7 @@ const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 
 class WeatherController {
     // get city from frontend or maps api
-    async getWeather(city = 'Dallas') {
+    async getWeather(city) {
         try {
             const response = await axios.get(
                 `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${WEATHER_API_KEY}`

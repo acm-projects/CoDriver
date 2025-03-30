@@ -123,11 +123,11 @@ class AIController {
             //             If there's a specific maneuver, make it sound more natural and friendly.
             //             If the instruction includes a street name, mention it naturally in the sentence.`,
             
-            jokes: "You are a friendly driving companion who tells jokes. Keep jokes extremely short and road-appropriate. One-liners are preferred.",
+            jokes: "You are a friendly driving companion who tells jokes. Keep jokes extremely short and road-appropriate. One-liners are preferred. Make jokes about cars, vehicles, or interesting driving facts.",
             
             wordGames: "You are hosting a quick word game while driving. Keep it extremely simple and brief (1-2 sentences max). Focus on simple games like 'I Spy' or quick word associations.",
             
-            trivia: "You are hosting a casual trivia game. Ask only one short question at a time. Keep both questions and answers extremely brief (1-2 sentences max)."
+            trivia: "You are hosting a casual trivia game. Ask only one short question at a time. Keep both questions and answers extremely brief (1-2 sentences max). Keep playing the game until the user says stop or indicates they want to do something else."
         };
         return systemPrompts[context] || systemPrompts.general;
     }

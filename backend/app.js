@@ -2,13 +2,15 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const AIController = require('./controllers/aiController');
 const commandController = require('./controllers/commandController');
+const WebSocket = require('ws');
+const axios = require('axios');
 // const weatherController = require('./controllers/weatherController');
 const musicController = require('./controllers/musicController');
 const directionsController = require('./controllers/directionsController');
 const hazardController = require('./controllers/hazardController');
 const http = require('http');
-const WebSocket = require('ws');
 const NavigationController = require('./controllers/navigationController');
+const { start } = require('repl');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -49,8 +51,8 @@ try {
 
 // endpoimt for command controller (music, weather, etc)
 app.post('/command', async (req, res) => {
-  const { command, userInput, sessionId = 'default' } = req.body;
-
+  const { command, userInput, destination, sessionId = 'default' } = req.body;
+  city = null;
   // Handle both command and userInput
   const inputText = command || userInput;
 
@@ -58,9 +60,25 @@ app.post('/command', async (req, res) => {
     return res.status(400).json({ error: 'Command or userInput is required' });
   }
 
+  if(destination) {
+    const cityRegex = /,\s*([^,]+),\s*\w{2}\s*\d{5}/;
+    const match = destination.match(cityRegex);
+    city = match ? match[1].trim() : null;
+
+    if (!city) {
+      console.log("no city found")
+      city = "Dallas"; // default city
+      //return res.status(400).json({ error: 'Unable to extract city from destination' });
+
+    }
+    console.log("city found: " + city);
+
+
+  }
+
   try {
     // Process through command controller which will handle both specific commands and AI conversations
-    const response = await commandController.processCommand(inputText, sessionId);
+    const response = await commandController.processCommand(inputText, sessionId, city);
     res.json(response);
   } catch (error) {
     console.error('Error processing command/conversation:', error);
@@ -182,7 +200,7 @@ app.post('/api/navigation/generate-route', async (req, res) => {
     }
 });
 
-// Add this route to your Express app
+// add this route to your Express app
 app.post('/api/navigation/start', async (req, res) => {
     try {
         const { origin, destination } = req.body;
@@ -459,6 +477,95 @@ app.post('/api/simulation/test', (req, res) => {
   NavigationController.startNavigationTest(origin, destination);
   res.json({ message: 'Simulation test started' });
 });
+
+
+app.post("/startSimulationDirections", async (req, res) => {
+  const {destination } = req.body;
+
+  if (!destination) {
+    return res.status(400).json({ error: 'Destination is required' });
+  }
+
+  startNavigationTest(destination);
+}
+);
+
+
+
+
+// simulation test route websocket and endpoints 
+
+async function updatePosition(lat, lng) {
+  try {
+      // update the app's simulated location directly
+      await axios.post('http://localhost:3000/api/simulation/location', {
+          lat,
+          lng,
+          accuracy: 10
+      });
+      console.log(`Updated position to: ${lat}, ${lng}`);
+  } catch (error) {
+      console.error('Error updating position:', error);
+  }
+}
+
+async function startNavigationTest(destination) {
+  try {
+      // define start and end points- make input variable when integrating with frontend
+      const origin = "2800 Waterview Pkwy, Richardson, TX 75080";
+      // const destination = "242 W Campbell Rd, Richardson, TX 75080";
+
+      // connect to websocket
+      const ws = new WebSocket('ws://localhost:3000');
+      
+      ws.on('open', async () => {
+          console.log('Connected to server');
+
+          // enable simulation mode
+          await axios.post('http://localhost:3000/api/simulation/enable');
+          console.log('Simulation mode enabled');
+
+          // start navigation
+          const response = await axios.post('http://localhost:3000/api/navigation/start', {
+              origin,
+              destination
+          });
+          console.log('Navigation started:', response.data);
+
+          // get route points from the response
+          const routePoints = response.data.routePoints;
+          console.log(`Simulating navigation through ${routePoints.length} points`);
+
+          // simulate movement through the route points
+          for (const point of routePoints) {
+              await updatePosition(point.lat, point.lng);
+              await new Promise(resolve => setTimeout(resolve, 5000)); // wait 5 seconds between updates- could change this to be the duration of each navigation step
+          }
+      });
+
+      // handle websocket messages
+      ws.on('message', (data) => {
+          const message = JSON.parse(data);
+          console.log('Received:', message);
+      });
+
+      // handle websocket errors
+      ws.on('error', (error) => {
+          console.error('WebSocket error:', error);
+      });
+
+      // handle websocket close
+      ws.on('close', () => {
+          console.log('Disconnected from server');
+      });
+
+  } catch (error) {
+      console.error('Error in navigation test:', error);
+  }
+}
+
+// start the test -- make an endpoint for this in the app.js when integrating with frontend
+// startNavigationTest(); 
 
 server.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
