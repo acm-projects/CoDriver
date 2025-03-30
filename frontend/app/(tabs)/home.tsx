@@ -1,39 +1,58 @@
 import React, { useState, useEffect } from "react";
 import { View, Button, StyleSheet } from "react-native";
-import axios from "axios"; // Import axios to make HTTP requests
+import axios from "axios";
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from "expo-speech-recognition";
 import { Text, TextInput, TouchableOpacity, Image, Modal } from 'react-native';
-
-import {
-  Animated,
-  Easing,
-} from 'react-native';
+import { Animated, Easing } from 'react-native';
 import * as Speech from 'expo-speech';
 
 export default function HomeScreen() {
-  const [recognizing, setRecognizing] = useState(true); // Start in recognizing state
+  const [recognizing, setRecognizing] = useState(true);
   const [transcript, setTranscript] = useState("");
-  const [backendResponse, setBackendResponse] = useState(""); // New state for backend response
+  const [backendResponse, setBackendResponse] = useState("");
   const [hasPermission, setHasPermission] = useState(false);
-  const [loading, setLoading] = useState(false); // Track loading state for backend calls
+  const [loading, setLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false); // Track if TTS is active
 
   // Check permissions on component mount
   useEffect(() => {
     checkPermissions();
-    startListening(); // Start listening as soon as the component mounts
+    startListening();
   }, []);
 
-  // New useEffect to handle text-to-speech for backend response
+  // Handler for text-to-speech with muting
   useEffect(() => {
     if (backendResponse) {
+      // Mute the microphone while speaking
+      if (recognizing) {
+        stopListening();
+      }
+      
+      setIsSpeaking(true);
+      
       // Use Expo Speech to speak the backend response
       Speech.speak(backendResponse, {
-        rate: 0.8, // Optional: Adjust speech rate (0.1 to 1.0)
-        pitch: 1.0, // Optional: Adjust pitch (0.5 to 2.0)
-        language: 'en-US' // Optional: Specify language
+        rate: 0.8,
+        pitch: 1.0,
+        language: 'en-US',
+        onDone: () => {
+          setIsSpeaking(false);
+          // Resume listening after speaking is done
+          startListening();
+        },
+        onStopped: () => {
+          setIsSpeaking(false);
+          // Resume listening if speech is manually stopped
+          startListening();
+        },
+        onError: () => {
+          setIsSpeaking(false);
+          // Resume listening if there's an error
+          startListening();
+        }
       });
     }
   }, [backendResponse]);
@@ -65,13 +84,16 @@ export default function HomeScreen() {
   useSpeechRecognitionEvent("result", (event) => {
     const speechResult = event.results[0]?.transcript || "";
     setTranscript(speechResult);
-    console.log("Speech to Text Result:", speechResult); // Output to console
+    console.log("Speech to Text Result:", speechResult);
   });
   useSpeechRecognitionEvent("error", (event) => {
     console.log("Error:", event.error, "Message:", event.message);
   });
 
   const startListening = async () => {
+    // Don't start listening if TTS is active
+    if (isSpeaking) return;
+    
     if (!hasPermission) {
       await requestPermissions();
     }
@@ -79,11 +101,12 @@ export default function HomeScreen() {
       lang: "en-US",
       interimResults: true,
       maxAlternatives: 1,
-      continuous: true, // Continuous listening
+      continuous: true,
       requiresOnDeviceRecognition: false,
       addsPunctuation: false,
       contextualStrings: ["weather", "temperature", "city", "weather in", "ai", "chat", "conversation"],
     });
+    setRecognizing(true);
   };
 
   const stopListening = () => {
@@ -104,29 +127,52 @@ export default function HomeScreen() {
     if (!transcript) return;
 
     try {
-      setLoading(true); // Start loading
-      const response = await axios.post('http://localhost:8000/command', {
-        userInput: transcript,
-        sessionId: 'unique-session-id', // Optional session ID
-      });
-
-      console.log("Backend response:", response.data);
+      setLoading(true);
       
-      // Set the backend response text
-      setBackendResponse(response.data.text || response.data.message || "No response received");
+      // Implement debouncing to prevent multiple API calls
+      // Only proceed if not currently speaking
+      if (!isSpeaking) {
+        const response = await axios.post('http://localhost:8000/command', {
+          userInput: transcript,
+          sessionId: 'unique-session-id',
+        });
+
+        console.log("Backend response:", response.data);
+        
+        // Extract the full response string, regardless of message type
+        // This ensures we're speaking the complete response text
+        if (response.data && response.data.response) {
+          setBackendResponse(response.data.response);
+        } else {
+          setBackendResponse("No response received");
+        }
+      }
     } catch (error) {
       console.error("Error sending speech to backend:", error);
       setBackendResponse("Sorry, there was an error processing your request.");
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
-  // Call sendSpeechToBackend when speech recognition stops and transcript is available
+  // Modified useEffect with debouncing to prevent multiple API calls
   useEffect(() => {
-    if (transcript) {
-      sendSpeechToBackend();
+    let debounceTimer = null;
+    
+    if (transcript && !isSpeaking) {
+      // Clear any existing timer
+      if (debounceTimer) clearTimeout(debounceTimer);
+      
+      // Set a new timer
+      debounceTimer = setTimeout(() => {
+        sendSpeechToBackend();
+      }, 1000); // 1 second delay to stabilize transcript
     }
+    
+    // Cleanup function
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
   }, [transcript]); 
 
   return (
