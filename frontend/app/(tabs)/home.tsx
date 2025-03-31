@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { View, Button, StyleSheet } from "react-native";
 import axios from "axios";
@@ -30,9 +31,9 @@ export default function HomeScreen() {
       if (recognizing) {
         stopListening();
       }
-      
+
       setIsSpeaking(true);
-      
+
       // Use Expo Speech to speak the backend response
       Speech.speak(backendResponse, {
         rate: 0.8,
@@ -93,7 +94,7 @@ export default function HomeScreen() {
   const startListening = async () => {
     // Don't start listening if TTS is active
     if (isSpeaking) return;
-    
+
     if (!hasPermission) {
       await requestPermissions();
     }
@@ -104,7 +105,21 @@ export default function HomeScreen() {
       continuous: true,
       requiresOnDeviceRecognition: false,
       addsPunctuation: false,
-      contextualStrings: ["weather", "temperature", "city", "weather in", "ai", "chat", "conversation"],
+      contextualStrings: [
+        "weather", 
+        "temperature", 
+        "city", 
+        "weather in", 
+        "ai", 
+        "chat", 
+        "conversation",
+        "start navigation",
+        "navigate to",
+        "take me to",
+        "directions to",
+        "how do I get to",
+        "route to"
+      ],
     });
     setRecognizing(true);
   };
@@ -122,29 +137,63 @@ export default function HomeScreen() {
     }
   };
 
-  // Function to send the transcript to the backend (CommandController)
+  // Function to send the transcript to the backend
   const sendSpeechToBackend = async () => {
     if (!transcript) return;
 
     try {
       setLoading(true);
-      
-      // Implement debouncing to prevent multiple API calls
-      // Only proceed if not currently speaking
-      if (!isSpeaking) {
-        const response = await axios.post('http://localhost:8000/command', {
-          userInput: transcript,
-          sessionId: 'unique-session-id',
-        });
 
-        console.log("Backend response:", response.data);
-        
-        // Extract the full response string, regardless of message type
-        // This ensures we're speaking the complete response text
-        if (response.data && response.data.response) {
-          setBackendResponse(response.data.response);
+      // Check if transcript contains navigation keywords
+      const navigationKeywords = ["start navigation", "navigate to", "take me to", "directions to", "how do I get to", "route to"];
+      const isNavigationRequest = navigationKeywords.some(keyword => 
+        transcript.toLowerCase().includes(keyword)
+      );
+
+      // Extract destination from the transcript
+      let destination = "";
+      if (isNavigationRequest) {
+        // Parse to extract destination
+        for (const keyword of navigationKeywords) {
+          if (transcript.toLowerCase().includes(keyword)) {
+            destination = transcript.toLowerCase().split(keyword)[1].trim();
+            break;
+          }
+        }
+      }
+
+      // If not currently speaking
+      if (!isSpeaking) {
+        // Choose the appropriate endpoint based on the command type
+        if (isNavigationRequest && destination) {
+          // Get current location (in a real app, you'd use geolocation)
+          // For this example, we'll use a hardcoded origin
+          const origin = "2800 Waterview Pkwy, Richardson, TX 75080"; // Default origin
+          
+          console.log(`Starting navigation to: ${destination}`);
+          
+          // Call navigation-specific endpoint
+          const response = await axios.post('http://localhost:8000/api/navigation/start', {
+            origin: origin,
+            destination: destination
+          });
+          
+          console.log("Navigation started:", response.data);
+          setBackendResponse(`Starting navigation to ${destination}`);
         } else {
-          setBackendResponse("No response received");
+          // Use the general command endpoint for other requests
+          const response = await axios.post('http://localhost:8000/command', {
+            userInput: transcript,
+            sessionId: 'unique-session-id',
+          });
+
+          console.log("Backend response:", response.data);
+
+          if (response.data && response.data.response) {
+            setBackendResponse(response.data.response);
+          } else {
+            setBackendResponse("No response received");
+          }
         }
       }
     } catch (error) {
@@ -158,22 +207,22 @@ export default function HomeScreen() {
   // Modified useEffect with debouncing to prevent multiple API calls
   useEffect(() => {
     let debounceTimer = null;
-    
+
     if (transcript && !isSpeaking) {
       // Clear any existing timer
       if (debounceTimer) clearTimeout(debounceTimer);
-      
+
       // Set a new timer
       debounceTimer = setTimeout(() => {
         sendSpeechToBackend();
       }, 1000); // 1 second delay to stabilize transcript
     }
-    
+
     // Cleanup function
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer);
     };
-  }, [transcript]); 
+  }, [transcript]);
 
   return (
     <View style={styles.container}>
