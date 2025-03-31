@@ -3,23 +3,21 @@ const AIController = require('./aiController');
 const WeatherController = require('./weatherController');
 
 class CommandController {
-    async processCommand(userInput, sessionId) {
+    async processCommand(userInput, sessionId, city) {
         const input = userInput.toLowerCase();
         
-        // some weather command triggers 
+        // Weather command triggers 
         const weatherTriggers = [
             'weather', 'temperature', 'how hot', 'how cold'
         ];
 
         if (weatherTriggers.some(trigger => input.includes(trigger))) {
             try {
-                const city = this.extractCity(userInput); // Calling the extractCity method
-                const weatherData = await WeatherController.getWeather(city);
+                // Use city parameter if provided, otherwise extract from input
+                const locationCity = city || this.extractCity(userInput);
+                const weatherData = await WeatherController.getWeather(locationCity);
                 
-                // old DeepSeek call
-                // const aiResponse = await AIController.getDeepSeekResponse(
-                
-                // new Claude call (sm better omg)
+                // Claude call
                 const aiResponse = await AIController.getClaudeResponse(
                     userInput,
                     sessionId,
@@ -37,7 +35,7 @@ class CommandController {
             }
         }
 
-        // Check if it's a music command
+        // Music commands
         const musicCommands = {
             'play music': { play: true },
             'pause music': { pause: true },
@@ -46,6 +44,12 @@ class CommandController {
             'previous song': { previous: true },
             'play next': { next: true },
             'play previous': { previous: true },
+            // Shorter commands commented out as in the second file
+            // 'pause': { pause: true },
+            // 'next': { next: true },
+            // 'skip': { skip: true },
+            // 'previous': { previous: true },
+            // 'back': { previous: true }
         };
 
         // Check for music commands first

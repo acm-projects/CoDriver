@@ -97,9 +97,25 @@ class HazardController extends EventEmitter {
 
     async getNearbyRoads(position) {
         try {
+            // handle string format position (convert to object)
+            if (typeof position === 'string') {
+                const [lat, lng] = position.split(',').map(Number);
+                position = { lat, lng };
+            }
+
+            // validate da position
+            if (!position || typeof position.lat !== 'number' || typeof position.lng !== 'number') {
+                console.log('Invalid position provided for nearby roads:', position);
+                return [];
+            }
+
             // get roads within the radius by creating a set of points around the current position
             const points = this.generatePointsAroundPosition(position, this.HAZARD_CHECK_RADIUS);
+            
+            // Format points for API
             const pointsString = points.map(p => `${p.lat},${p.lng}`).join('|');
+            
+            console.log('Requesting nearby roads for points:', pointsString);
 
             const response = await axios.get('https://roads.googleapis.com/v1/snapToRoads', {
                 params: {
@@ -109,15 +125,31 @@ class HazardController extends EventEmitter {
                 }
             });
 
-            return response.data.snappedPoints || [];
+            if (!response.data || !response.data.snappedPoints) {
+                console.log('No snapped points returned from Roads API');
+                return [];
+            }
+
+            console.log('Snapped points:', response.data.snappedPoints);
+
+            return response.data.snappedPoints;
         } catch (error) {
-            console.error('Error getting nearby roads:', error);
+            console.error('Error getting nearby roads:', error.message);
+            if (error.response) {
+                console.error('Roads API response:', error.response.data);
+            }
             return [];
         }
     }
 
     async getTrafficData(snappedPoints) {
         try {
+            // check if we have valid snapped points
+            if (!snappedPoints || snappedPoints.length === 0) {
+                console.log('No valid snapped points for traffic data');
+                return { incidents: [] };
+            }
+
             // use the Places API to get traffic data for the road segments
             const response = await axios.get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', {
                 params: {
@@ -159,22 +191,19 @@ class HazardController extends EventEmitter {
         return { incidents };
     }
 
-    generatePointsAroundPosition(center, radius) {
+    generatePointsAroundPosition(position, radius) {
+        // generate points in a square around the position
         const points = [];
-        const numPoints = 8; // generate 8 points around the circle
-        
-        for (let i = 0; i < numPoints; i++) {
-            const angle = (i * 2 * Math.PI) / numPoints;
-            const dx = radius * Math.cos(angle);
-            const dy = radius * Math.sin(angle);
-            
-            // convert dx,dy to lat,lng
-            const lat = center.lat + (dy / 111111); // 111111 meters per degree of latitude
-            const lng = center.lng + (dx / (111111 * Math.cos(center.lat * Math.PI / 180)));
-            
-            points.push({ lat, lng });
-        }
-        
+        const latStep = radius / 111320; // 1 degree latitude ≈ 111.32 km
+        const lngStep = radius / (111320 * Math.cos(position.lat * Math.PI / 180));
+
+        // generate points centered on the actual position
+        points.push(position); // Include the center point
+        points.push({ lat: position.lat + latStep, lng: position.lng + lngStep });
+        points.push({ lat: position.lat + latStep, lng: position.lng - lngStep });
+        points.push({ lat: position.lat - latStep, lng: position.lng + lngStep });
+        points.push({ lat: position.lat - latStep, lng: position.lng - lngStep });
+
         return points;
     }
 

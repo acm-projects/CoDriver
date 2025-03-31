@@ -2,6 +2,7 @@ const { Anthropic } = require('@anthropic-ai/sdk');
 const axios = require('axios');
 require('dotenv').config();
 
+// Claude configuration
 const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
 const anthropic = new Anthropic({
     apiKey: CLAUDE_API_KEY,
@@ -54,7 +55,7 @@ class AIController {
 
             this.sessionHistory[sessionId].push({ role: "assistant", content: aiResponse }); // Save response
 
-            // handle music commands (existing code)
+            // handle music commands
             const musicCommands = {
                 'MUSIC_PLAY': { endpoint: '/api/music/play', action: 'Playing music' },
                 'MUSIC_PAUSE': { endpoint: '/api/music/pause', action: 'Pausing music' },
@@ -96,11 +97,25 @@ class AIController {
             
             hazard: this.buildHazardPrompt(hazardData),
             
-            jokes: "You are a friendly driving companion who tells jokes. Keep jokes extremely short and road-appropriate. One-liners are preferred.",
+            navigation: `You are a friendly passenger giving navigation instructions. Make the instructions sound natural and conversational.
+                        Convert the given navigation instruction into a more human-like format.
+                        Keep the instruction clear and concise (maximum 1-2 sentences).
+                        Make it sound like a friend giving directions from the passenger seat.
+                        Examples:
+                        - Instead of "Turn right on Main Street", say "Hey, you'll want to turn right on Main Street up ahead"
+                        - Instead of "In 100 meters, turn left", say "Coming up soon, you'll need to make a left turn"
+                        - Instead of "Make a U-turn", say "You'll need to make a U-turn at the next opportunity"
+                        - Instead of "Continue straight", say "Just keep going straight ahead"
+                        - Instead of "Merge onto highway", say "You'll need to merge onto the highway coming up"
+                        Include any distance or duration information naturally in the sentence.
+                        If there's a specific maneuver, make it sound more natural and friendly.
+                        If the instruction includes a street name, mention it naturally in the sentence.`,
+            
+            jokes: "You are a friendly driving companion who tells jokes. Keep jokes extremely short and road-appropriate. One-liners are preferred. Make jokes about cars, vehicles, or interesting driving facts.",
             
             wordGames: "You are hosting a quick word game while driving. Keep it extremely simple and brief (1-2 sentences max). Focus on simple games like 'I Spy' or quick word associations.",
             
-            trivia: "You are hosting a casual trivia game. Ask only one short question at a time. Keep both questions and answers extremely brief (1-2 sentences max)."
+            trivia: "You are hosting a casual trivia game. Ask only one short question at a time. Keep both questions and answers extremely brief (1-2 sentences max). Keep playing the game until the user says stop or indicates they want to do something else."
         };
         return systemPrompts[context] || systemPrompts.general;
     }
@@ -165,6 +180,32 @@ class AIController {
 
         // Default to general AI response for everything else
         return this.getClaudeResponse(userInput, sessionId, 'general');
+    }
+
+    // New method to format navigation instruction
+    async formatNavigationInstruction(instruction) {
+        try {
+            console.log('Formatting navigation instruction:', instruction.instruction);
+            const userInput = `Convert this navigation instruction to a more conversational format. Include any distance or duration information naturally:
+                             Original instruction: ${instruction.instruction}
+                             Distance: ${instruction.distance}
+                             Duration: ${instruction.duration}
+                             Maneuver: ${instruction.maneuver || 'none'}
+                             Examples:
+                            - Instead of "Turn right on Main Street", say "Hey, you'll want to turn right on Main Street up ahead"
+                            - Instead of "In 100 meters, turn left", say "Coming up soon, you'll need to make a left turn"`;
+            
+            const formattedInstruction = await this.getClaudeResponse(userInput, 'navigation', 'navigation');
+            
+            return {
+                ...instruction,
+                instruction: formattedInstruction,
+                originalInstruction: instruction.instruction // Keep the original instruction for reference
+            };
+        } catch (error) {
+            console.error('Error formatting navigation instruction:', error);
+            return instruction; // Return original instruction if formatting fails
+        }
     }
 }
 
