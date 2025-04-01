@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Button, StyleSheet } from "react-native";
 import axios from "axios";
 import {
@@ -10,7 +9,24 @@ import { Text, TextInput, TouchableOpacity, Image, Modal } from 'react-native';
 import { Animated, Easing } from 'react-native';
 import * as Speech from 'expo-speech';
 
+interface WebSocketEvent {
+  data: string;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognitionResultEvent {
+  results: {
+    transcript?: string;
+  }[];
+}
+
 export default function HomeScreen() {
+  const [speechQueue, setSpeechQueue] = useState<string[]>([]);
+  const ws = useRef<WebSocket | null>(null); // WebSocket reference with proper type
   const [recognizing, setRecognizing] = useState(true);
   const [transcript, setTranscript] = useState("");
   const [backendResponse, setBackendResponse] = useState("");
@@ -18,45 +34,138 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false); // Track if TTS is active
 
+  const processSpeechQueue = () => {
+    if (speechQueue.length === 0) return;
+
+    // Get the next item from the queue
+    const textToSpeak = speechQueue[0];
+
+    // Always stop listening before speaking
+    stopListening();
+
+    // Set speaking state
+    setIsSpeaking(true);
+
+    // Speak the text
+    Speech.speak(textToSpeak, {
+      rate: 0.8,
+      pitch: 1.0,
+      language: "en-US",
+      onDone: () => {
+        // Update queue by removing the item we just processed
+        setSpeechQueue(prevQueue => prevQueue.slice(1));
+        setIsSpeaking(false);
+
+        // If queue is now empty, restart listening
+        if (speechQueue.length <= 1) {
+          setTimeout(() => {
+            startListening();
+          }, 300);
+        }
+      },
+      onStopped: () => {
+        // Update queue by removing the item we just processed
+        setSpeechQueue(prevQueue => prevQueue.slice(1));
+        setIsSpeaking(false);
+
+        // If queue is now empty, restart listening
+        if (speechQueue.length <= 1) {
+          setTimeout(() => {
+            startListening();
+          }, 300);
+        }
+      },
+      onError: (error) => {
+        console.error("Speech error:", error);
+        // Update queue by removing the item we just processed
+        setSpeechQueue(prevQueue => prevQueue.slice(1));
+        setIsSpeaking(false);
+
+        // If queue is now empty, restart listening
+        if (speechQueue.length <= 1) {
+          setTimeout(() => {
+            startListening();
+          }, 300);
+        }
+      }
+    });
+  };
+
+  useEffect(() => {
+    // Only process the queue if we're not currently speaking and there are items in the queue
+    if (!isSpeaking && speechQueue.length > 0) {
+      processSpeechQueue();
+    }
+  }, [isSpeaking, speechQueue]);
+
+  useEffect(() => {
+    ws.current = new WebSocket("ws://localhost:8000/");
+
+    ws.current.onopen = () => {
+      console.log("WebSocket connected");
+    };
+
+    ws.current.onmessage = (event: WebSocketEvent) => {
+      console.log("WebSocket message received:", event.data);
+
+      try {
+        // Parse the message data
+        const parsedData = JSON.parse(event.data);
+        console.log("Parsed WebSocket data:", parsedData);
+
+        let textToSpeak = "";
+
+        // Check message type and extract the appropriate text to speak
+        if (parsedData.type === "instruction") {
+          console.log("Instruction received:", parsedData.data);
+          textToSpeak = parsedData.data.instruction || "";
+        }
+        else if (parsedData.type === "approachingTurn") {
+          console.log("Approaching turn:", parsedData.data);
+          // Extract relevant info from approaching turn data
+          textToSpeak = parsedData.data.instruction || "";
+        }
+        else if (parsedData.type === "complete") {
+          console.log("Navigation complete:", parsedData.data);
+          textToSpeak = parsedData.data.message || "You have reached your destination";
+        }
+
+        // Update the UI with the extracted text
+        setBackendResponse(textToSpeak || JSON.stringify(parsedData));
+
+        // Instead of speaking immediately, add the text to the speech queue
+        if (textToSpeak) {
+          setSpeechQueue(prevQueue => [...prevQueue, textToSpeak]);
+        }
+      } catch (error) {
+        console.error("Error processing WebSocket message:", error);
+        setBackendResponse(event.data); // Fallback to raw data
+      }
+    };
+
+    ws.current.onerror = (error: Event) => {
+      console.error("WebSocket Error:", error);
+    };
+
+    ws.current.onclose = () => {
+      console.log("WebSocket disconnected");
+    };
+
+    return () => {
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
+  }, []);
+
   // Check permissions on component mount
   useEffect(() => {
     checkPermissions();
     startListening();
   }, []);
 
-  // Handler for text-to-speech with muting
-  useEffect(() => {
-    if (backendResponse) {
-      // Mute the microphone while speaking
-      if (recognizing) {
-        stopListening();
-      }
-
-      setIsSpeaking(true);
-
-      // Use Expo Speech to speak the backend response
-      Speech.speak(backendResponse, {
-        rate: 0.8,
-        pitch: 1.0,
-        language: 'en-US',
-        onDone: () => {
-          setIsSpeaking(false);
-          // Resume listening after speaking is done
-          startListening();
-        },
-        onStopped: () => {
-          setIsSpeaking(false);
-          // Resume listening if speech is manually stopped
-          startListening();
-        },
-        onError: () => {
-          setIsSpeaking(false);
-          // Resume listening if there's an error
-          startListening();
-        }
-      });
-    }
-  }, [backendResponse]);
+  // Handler for text-to-speech with muting - REMOVED
+  // Since we now handle text-to-speech directly in the WebSocket onmessage handler
 
   const handleTextToSpeech = () => {
     const thingToSay = transcript;
@@ -82,12 +191,16 @@ export default function HomeScreen() {
   // Event listeners for speech recognition
   useSpeechRecognitionEvent("start", () => setRecognizing(true));
   useSpeechRecognitionEvent("end", () => setRecognizing(false));
-  useSpeechRecognitionEvent("result", (event) => {
+  useSpeechRecognitionEvent("result", (event: SpeechRecognitionResultEvent) => {
     const speechResult = event.results[0]?.transcript || "";
     setTranscript(speechResult);
     console.log("Speech to Text Result:", speechResult);
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ userInput: speechResult }));
+      console.log("Sent to WebSocket:", speechResult);
+    }
   });
-  useSpeechRecognitionEvent("error", (event) => {
+  useSpeechRecognitionEvent("error", (event: SpeechRecognitionErrorEvent) => {
     console.log("Error:", event.error, "Message:", event.message);
   });
 
@@ -106,12 +219,12 @@ export default function HomeScreen() {
       requiresOnDeviceRecognition: false,
       addsPunctuation: false,
       contextualStrings: [
-        "weather", 
-        "temperature", 
-        "city", 
-        "weather in", 
-        "ai", 
-        "chat", 
+        "weather",
+        "temperature",
+        "city",
+        "weather in",
+        "ai",
+        "chat",
         "conversation",
         "start navigation",
         "navigate to",
@@ -146,7 +259,7 @@ export default function HomeScreen() {
 
       // Check if transcript contains navigation keywords
       const navigationKeywords = ["start navigation", "navigate to", "take me to", "directions to", "how do I get to", "route to"];
-      const isNavigationRequest = navigationKeywords.some(keyword => 
+      const isNavigationRequest = navigationKeywords.some(keyword =>
         transcript.toLowerCase().includes(keyword)
       );
 
@@ -169,15 +282,14 @@ export default function HomeScreen() {
           // Get current location (in a real app, you'd use geolocation)
           // For this example, we'll use a hardcoded origin
           const origin = "2800 Waterview Pkwy, Richardson, TX 75080"; // Default origin
-          
+          const destination = "2831 W 15th St Ste 200, Plano, Tx 75075"
           console.log(`Starting navigation to: ${destination}`);
-          
+
           // Call navigation-specific endpoint
-          const response = await axios.post('http://localhost:8000/api/navigation/start', {
-            origin: origin,
+          const response = await axios.post('http://localhost:8000/startSimulationDirections', {
             destination: destination
           });
-          
+
           console.log("Navigation started:", response.data);
           setBackendResponse(`Starting navigation to ${destination}`);
         } else {
@@ -206,7 +318,7 @@ export default function HomeScreen() {
 
   // Modified useEffect with debouncing to prevent multiple API calls
   useEffect(() => {
-    let debounceTimer = null;
+    let debounceTimer: NodeJS.Timeout | null = null;
 
     if (transcript && !isSpeaking) {
       // Clear any existing timer

@@ -173,7 +173,7 @@ app.post("/weather", async (req, res) => {
 
     // Fetch weather data from WeatherController
     const weatherData = await WeatherController.getWeather(city);
-    
+
     if (!weatherData.success) {
       console.error("Failed to fetch weather data:", weatherData);
       return res.status(500).json({ error: "Unable to fetch weather data" });
@@ -193,7 +193,7 @@ app.post("/weather", async (req, res) => {
 // Simulation routes
 app.post("/api/simulation/location", (req, res) => {
   const { lat, lng, accuracy } = req.body;
-  
+
   if (typeof lat !== "number" || typeof lng !== "number") {
     return res.status(400).json({ error: "Latitude and longitude are required numbers" });
   }
@@ -209,7 +209,7 @@ app.post("/api/simulation/location", (req, res) => {
 
 app.post("/api/simulation/mode", (req, res) => {
   const { enabled } = req.body;
-  
+
   if (typeof enabled !== "boolean") {
     return res.status(400).json({ error: "Enabled parameter must be a boolean" });
   }
@@ -336,7 +336,7 @@ wss.on("connection", (ws) => {
     try {
       console.log("Raw message received:", message);
       console.log("Message type:", typeof message);
-      
+
       let data;
       try {
         data = JSON.parse(message.toString());
@@ -346,7 +346,7 @@ wss.on("connection", (ws) => {
         ws.send(JSON.stringify({ error: "Invalid JSON format" }));
         return;
       }
-      
+
       if (data.type === "startNavigation") {
         console.log("Starting navigation from:", data.origin, "to:", data.destination);
         const result = await NavigationController.startNavigation(
@@ -422,7 +422,7 @@ wss.on("connection", (ws) => {
       ws.send(JSON.stringify({
         type: "complete",
         data: {
-          message: "Great job! You've reached your destination, slay",
+          message: "Great job! You've reached your destination.",
           timestamp: new Date().toISOString()
         }
       }));
@@ -461,7 +461,7 @@ async function startNavigationTest(destination) {
 
     // Connect to websocket
     const ws = new WebSocket(`ws://localhost:${port}`);
-    
+
     ws.on("open", async () => {
       console.log("Connected to server");
 
