@@ -33,6 +33,16 @@ export default function HomeScreen() {
   const [hasPermission, setHasPermission] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false); // Track if TTS is active
+  const [destination, setDestination] = useState(""); // Store the destination input
+
+  const handleInputChange = (text: string) => {
+    setDestination(text); // Update destination state when user types
+  };
+
+  const handleSubmitDestination = () => {
+    // Handle submitting the destination (e.g., send it to backend or use it in the app)
+    console.log("Destination entered:", destination);
+  };
 
   const processSpeechQueue = () => {
     if (speechQueue.length === 0) return;
@@ -40,7 +50,7 @@ export default function HomeScreen() {
     // Get the next item from the queue
     const textToSpeak = speechQueue[0];
 
-    // Always stop listening before speaking
+    // Make sure we stop listening before speaking to prevent feedback
     stopListening();
 
     // Set speaking state
@@ -56,24 +66,25 @@ export default function HomeScreen() {
         setSpeechQueue(prevQueue => prevQueue.slice(1));
         setIsSpeaking(false);
 
-        // If queue is now empty, restart listening
-        if (speechQueue.length <= 1) {
-          setTimeout(() => {
+        // Add a small delay before restarting listening
+        // to ensure TTS has completely finished
+        setTimeout(() => {
+          if (speechQueue.length === 0) {
             startListening();
-          }, 300);
-        }
+          }
+        }, 500);
       },
       onStopped: () => {
         // Update queue by removing the item we just processed
         setSpeechQueue(prevQueue => prevQueue.slice(1));
         setIsSpeaking(false);
 
-        // If queue is now empty, restart listening
-        if (speechQueue.length <= 1) {
-          setTimeout(() => {
+        // Add a small delay before restarting listening
+        setTimeout(() => {
+          if (speechQueue.length === 0) {
             startListening();
-          }, 300);
-        }
+          }
+        }, 500);
       },
       onError: (error) => {
         console.error("Speech error:", error);
@@ -81,16 +92,17 @@ export default function HomeScreen() {
         setSpeechQueue(prevQueue => prevQueue.slice(1));
         setIsSpeaking(false);
 
-        // If queue is now empty, restart listening
-        if (speechQueue.length <= 1) {
-          setTimeout(() => {
+        // Add a small delay before restarting listening
+        setTimeout(() => {
+          if (speechQueue.length === 0) {
             startListening();
-          }, 300);
-        }
+          }
+        }, 500);
       }
     });
   };
 
+  // Modified useEffect to handle the speech queue
   useEffect(() => {
     // Only process the queue if we're not currently speaking and there are items in the queue
     if (!isSpeaking && speechQueue.length > 0) {
@@ -195,10 +207,7 @@ export default function HomeScreen() {
     const speechResult = event.results[0]?.transcript || "";
     setTranscript(speechResult);
     console.log("Speech to Text Result:", speechResult);
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({ userInput: speechResult }));
-      console.log("Sent to WebSocket:", speechResult);
-    }
+
   });
   useSpeechRecognitionEvent("error", (event: SpeechRecognitionErrorEvent) => {
     console.log("Error:", event.error, "Message:", event.message);
@@ -211,6 +220,8 @@ export default function HomeScreen() {
     if (!hasPermission) {
       await requestPermissions();
     }
+
+    console.log("Starting speech recognition...");
     ExpoSpeechRecognitionModule.start({
       lang: "en-US",
       interimResults: true,
@@ -317,10 +328,12 @@ export default function HomeScreen() {
   };
 
   // Modified useEffect with debouncing to prevent multiple API calls
+  // Modified useEffect for sending speech to backend
   useEffect(() => {
-    let debounceTimer: NodeJS.Timeout | null = null;
+    let debounceTimer = null;
 
-    if (transcript && !isSpeaking) {
+    // Only process speech when we have transcript AND we're not speaking
+    if (transcript && !isSpeaking && recognizing) {
       // Clear any existing timer
       if (debounceTimer) clearTimeout(debounceTimer);
 
@@ -334,7 +347,7 @@ export default function HomeScreen() {
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer);
     };
-  }, [transcript]);
+  }, [transcript, isSpeaking, recognizing]);
 
   return (
     <View style={styles.container}>
@@ -407,7 +420,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Destination Button at the bottom */}
-      <TouchableOpacity style={styles.destinationButton}>
+      <TouchableOpacity style={styles.destinationButton} onPress={handleSubmitDestination}>
         {/* Left Section: Icon */}
         <View style={styles.leftSection2}>
           <Image
@@ -416,11 +429,15 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Right Section: Text + Icon */}
+        {/* Right Section: Text Input */}
         <View style={styles.rightSection2}>
-          <Text style={styles.destinationTabText} numberOfLines={1}>
-            Where are you heading?
-          </Text>
+          <TextInput
+            style={styles.destinationInput}
+            placeholder="Where are you heading?"
+            placeholderTextColor="#AE9A8C"
+            value={destination}
+            onChangeText={handleInputChange} // Update state on text change
+          />
           <Image
             source={require('../../assets/images/Voice 2.png')}
             style={styles.Voice2}
@@ -445,6 +462,17 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  destinationInput: {
+    flex: 1,
+    fontSize: 18,
+    color: '#AE9A8C',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0)', // Slightly transparent background
+    borderRadius: 20,
+    marginLeft: -10, // Space between the icon and input
+    width: '30%'
+  },
   muteButton: {
     position: 'absolute',
     bottom: 40,
@@ -632,6 +660,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',  // Align text and icon horizontally in the right section
     justifyContent: 'center',
     alignItems: 'center', // Center them vertically
+    width: '87%'
   },
   rightSection: {
     flexDirection: 'row',  // Arrange items horizontally
