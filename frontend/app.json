@@ -21,12 +21,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.anonymous.codriver"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
     },
-    
     "scheme": "codriver",
     "runtimeVersion": {
       "policy": "sdkVersion"

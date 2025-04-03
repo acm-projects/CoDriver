@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter, useSegments } from 'expo-router'; // Import useSegments
 import React from 'react';
 import { Platform } from 'react-native';
 
@@ -8,40 +8,47 @@ import { Ionicons } from '@expo/vector-icons';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import CustomHomeTab from '../CustomHomeTab';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
+  const segments = useSegments(); // Get route segments
+
+  const isHomeFocused = segments.length === 1 && segments[0] === 'index'; // Determine if home is focused
 
   return (
     <Tabs
       screenOptions={{
-        tabBarStyle: { backgroundColor: 'black' },  // Black background
-        tabBarActiveTintColor: 'white',  // Active tab color is white
-        tabBarInactiveTintColor: 'gray', // Inactive tabs color (optional)
-      }}>
+        tabBarStyle: { backgroundColor: 'black' },
+        tabBarActiveTintColor: '#CC5500',
+        tabBarInactiveTintColor: 'gray',
+      }}
+    >
       <Tabs.Screen
-        name="history"  // This must match the file name exactly
+        name="history"
         options={{
           title: 'History',
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="hourglass-outline" color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons size={30} name="list-outline" color={color} />,
         }}
       />
-      
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarButton: (props) => (
+            <CustomHomeTab color={isHomeFocused ? '#CC5500' : 'gray'} /> // Use isHomeFocused
+          ),
+          tabBarLabel: () => null,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="settings" color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons size={30} name="person-outline" color={color} />,
         }}
       />
-      
     </Tabs>
   );
 }

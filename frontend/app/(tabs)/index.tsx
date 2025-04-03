@@ -13,15 +13,12 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import * as Speech from 'expo-speech';
-import SpeechRecognition from '../SpeechRecognition';
 
 export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(true);
-  const [showSpeechRecognition, setShowSpeechRecognition] = useState(false);
-  const [isSpeechMounted, setIsSpeechMounted] = useState(false);
-  const [loading, setLoading] = useState(false); // Added for loading indicator
+  const [loading, setLoading] = useState(false);
+  const [destination, setDestination] = useState(''); // Added state for destination
 
-  const speechRef = useRef<{ startListening: () => void; stopListening: () => void } | null>(null);
   const rippleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0.5)).current;
 
@@ -75,7 +72,7 @@ export default function HomeScreen() {
     triggerRipple();
 
     try {
-      const response = await fetch('YOUR_BACKEND_API_URL'); // Replace with your actual backend URL
+      const response = await fetch('YOUR_BACKEND_API_URL');
       const data = await response.json();
 
       if (data.text) {
@@ -90,6 +87,12 @@ export default function HomeScreen() {
     setLoading(false);
   };
 
+  const handleFeelingLucky = () => {
+    setModalVisible(false);
+    // You can add logic here to use the 'destination' state if needed
+    console.log("Destination:", destination); // Example: Log the destination
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.topLeftContainer}>
@@ -101,7 +104,6 @@ export default function HomeScreen() {
         <Text style={styles.topLeftText}>CoDriver</Text>
       </View>
 
-      {/* Clickable Image with Ripple Effect */}
       <TouchableOpacity onPress={fetchAndSpeak} activeOpacity={0.7} disabled={loading}>
         <Animated.View
           style={[
@@ -133,17 +135,17 @@ export default function HomeScreen() {
               style={styles.input}
               placeholder="Where are you heading today?"
               placeholderTextColor="rgba(255, 255, 255, 0.6)"
+              value={destination} // Bind the value to the destination state
+              onChangeText={setDestination} // Update the state when text changes
+              selectionColor="white" // Added to make the cursor white
             />
 
             <TouchableOpacity style={styles.button} onPress={() => setModalVisible(false)}>
-              <Text style={styles.buttonText}>I'm feeling lucky!</Text>
+              <Text style={styles.buttonText}>Go to Address</Text>
             </TouchableOpacity>
-
           </View>
         </View>
       </Modal>
-
-      {showSpeechRecognition && <SpeechRecognition ref={speechRef} />}
     </View>
   );
 }
@@ -175,16 +177,16 @@ const styles = StyleSheet.create({
     width: 550,
     height: 550,
     alignSelf: 'center',
-    top: '50%',  
-    transform: [{ translateY: 100 }], 
+    top: '50%',
+    transform: [{ translateY: 100 }],
   },
   ripple: {
     position: 'absolute',
     width: 800,
     height: 800,
     alignSelf: 'center',
-    top: '50%',  
-    transform: [{ translateY: 150 }], 
+    top: '50%',
+    transform: [{ translateY: 150 }],
   },
   modalContainer: {
     flex: 1,
@@ -195,7 +197,7 @@ const styles = StyleSheet.create({
   popup: {
     width: '85%',
     height: 350,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(195, 186, 186, 0.44)',
     padding: 25,
     borderRadius: 15,
     alignItems: 'center',
@@ -208,7 +210,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   closeText: {
-    fontSize: 24,
+    fontSize: 30,
     color: 'white',
   },
   popupTitle: {
@@ -222,24 +224,31 @@ const styles = StyleSheet.create({
   input: {
     width: '90%',
     height: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    //backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 10,
     paddingHorizontal: 10,
     color: 'white',
     fontSize: 16,
     marginBottom: 20,
-    textAlignVertical: 'center',
+    alignSelf: 'flex-start',
+    textAlign: 'left',
+    //textAlignVertical: 'center',
+    borderBottomWidth: 1, // Added to create the bottom underline
+    borderBottomColor: 'white', // Set the underline color to white
   },
   button: {
-    backgroundColor: 'black',
+    backgroundColor: 'rgba(34, 35, 64, 1)',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
     marginTop: 10,
+    height:'15%',
+    width: '70%',
   },
   buttonText: {
+    textAlign: 'center',
     color: 'white',
-    fontSize: 16,
+    fontSize: 18,
   },
   loader: {
     position: 'absolute',
