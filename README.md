@@ -222,3 +222,6 @@ Start to focus on connecting the backend to frontend as a team
 - Kaushik Shivakumar
 - Siddhartha Somalinga Kailash
 - Sri Satya Sourish Reddy
+- 
+
+![image](https://drive.google.com/uc?export=view&id=12CNd-_3LErBp6fDX04N7u4rCT-mkuvI3)
