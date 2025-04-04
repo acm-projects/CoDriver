@@ -2,8 +2,7 @@ const { Anthropic } = require('@anthropic-ai/sdk');
 const axios = require('axios');
 require('dotenv').config();
 
-
-// new and hopefully better Claude configuration
+// Claude configuration
 const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
 const anthropic = new Anthropic({
     apiKey: CLAUDE_API_KEY,
@@ -20,7 +19,6 @@ class AIController {
     // new Claude response method
     async getClaudeResponse(userInput, sessionId, context = 'general', weatherData, hazardData) {
         try {
-
             if (!sessionId) {
                 console.warn("Warning: sessionId is missing. Using default session.");
                 sessionId = 'default'; // fallback to a default session
@@ -37,7 +35,6 @@ class AIController {
 
             const systemPrompt = this.getSystemPrompt(context, weatherData, hazardData);
             
-
             // append user input
             this.sessionHistory[sessionId].push({ role: "user", content: userInput });
 
@@ -55,13 +52,11 @@ class AIController {
                 messages: this.sessionHistory[sessionId]
             });
 
-            
             const aiResponse = response.content[0].text;
 
             this.sessionHistory[sessionId].push({ role: "assistant", content: aiResponse }); // Save response
 
-
-            // handle music commands (existing code)
+            // handle music commands
             const musicCommands = {
                 'MUSIC_PLAY': { endpoint: '/api/music/play', action: 'Playing music' },
                 'MUSIC_PAUSE': { endpoint: '/api/music/pause', action: 'Pausing music' },
@@ -132,7 +127,7 @@ class AIController {
             return "You are a helpful driving companion. If asked about hazards, explain that you're monitoring the road conditions.";
         }
 
-        // don't announce the same hazard twice in a row
+        // Don't announce the same hazard twice in a row
         const hazardKey = `${hazardData.type}-${hazardData.location.lat}-${hazardData.location.lng}`;
         if (this.lastHazardAnnounced === hazardKey) {
             return "You are a helpful driving companion. Acknowledge that you're still monitoring the previous hazard.";
@@ -151,12 +146,12 @@ class AIController {
     async handleUserInput(userInput, sessionId, hazardData) {
         const input = userInput.toLowerCase();
         
-        // if there's hazard data, prioritize announcing it
+        // If there's hazard data, prioritize announcing it
         if (hazardData) {
             return this.getClaudeResponse(userInput, sessionId, 'hazard', null, hazardData);
         }
 
-        // rest of the existing context detection
+        // Rest of the existing context detection for jokes, word games, trivia, etc.
         if (input.includes('joke') || input.includes('funny') || input.includes('make me laugh')) {
             return this.getClaudeResponse(userInput, sessionId, 'jokes');
         }
@@ -170,16 +165,15 @@ class AIController {
             input.includes('test my knowledge')) {
             return this.getClaudeResponse(userInput, sessionId, 'trivia');
         }
-        
+
+        // Default to general AI response for everything else
         return this.getClaudeResponse(userInput, sessionId, 'general');
     }
 
-    // new method to format navigation instruction
+    // New method to format navigation instruction
     async formatNavigationInstruction(instruction) {
         try {
-            // create a more detailed prompt for the AI
-
-            console.log('TRYING TO Formatting navigation instruction:', instruction.instruction);
+            console.log('Formatting navigation instruction:', instruction.instruction);
             const userInput = `Convert this navigation instruction to a more conversational format. Include any distance or duration information naturally:
                              Original instruction: ${instruction.instruction}
                              Distance: ${instruction.distance}
@@ -194,20 +188,13 @@ class AIController {
             return {
                 ...instruction,
                 instruction: formattedInstruction,
-                originalInstruction: instruction.instruction // i'm going to leave the original instruction for reference and if something goes wrong
+                originalInstruction: instruction.instruction // Keep the original instruction for reference
             };
         } catch (error) {
             console.error('Error formatting navigation instruction:', error);
-            return instruction; // return original instruction if formatting fails
+            return instruction; // Return original instruction if formatting fails
         }
     }
 }
 
 module.exports = new AIController();
-
-
-// the postman input as a json to http://localhost:3000/conversation or /command
-// {
-//     "userInput": "Lets play a game"
-  
-//   }
