@@ -1,4 +1,6 @@
 {
+  "main": "app.js",
+  "name": "backend",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "axios": "^1.8.3",
@@ -10,6 +12,6 @@
     "ws": "^8.18.1"
   },
   "scripts": {
-    "start": "node app.js & node test_navigation.js"
+    "start": "node app.js"
     }
 }

@@ -17,21 +17,26 @@ class HazardController extends EventEmitter {
             return { success: false, message: 'Hazard monitoring already active' };
         }
 
-        
         if (!process.env.GOOGLE_MAPS_API_KEY) {
             return { success: false, message: 'Google Maps API key not configured' };
         }
 
-        this.isMonitoring = true;
-        this.watchId = setInterval(async () => {
-            try {
-                await this.checkForHazards(currentPosition);
-            } catch (error) {
-                console.error('Error checking hazards:', error);
-            }
-        }, 30000); // check every 30 seconds
+        try {
+            this.isMonitoring = true;
+            this.watchId = setInterval(async () => {
+                try {
+                    await this.checkForHazards(currentPosition);
+                } catch (error) {
+                    console.error('Error checking hazards:', error);
+                    this.emit('error', { type: 'hazard_check', error: error.message });
+                }
+            }, 30000); // check every 30 seconds
 
-        return { success: true, message: 'Hazard monitoring started' };
+            return { success: true, message: 'Hazard monitoring started' };
+        } catch (error) {
+            this.isMonitoring = false;
+            throw error;
+        }
     }
 
     stopHazardMonitoring() {
@@ -49,6 +54,7 @@ class HazardController extends EventEmitter {
             const snappedPoints = await this.getNearbyRoads(position);
             const trafficData = await this.getTrafficData(snappedPoints);
             const currentHazards = new Set();
+            let hazardsFound = false;
             
             if (trafficData.incidents) {
                 for (const incident of trafficData.incidents) {
@@ -56,6 +62,7 @@ class HazardController extends EventEmitter {
                     currentHazards.add(hazardId);
 
                     if (!this.lastCheckedHazards.has(hazardId)) {
+                        hazardsFound = true;
                         const hazardInfo = {
                             type: this.getHazardType(incident.type),
                             severity: incident.severity,
@@ -72,22 +79,37 @@ class HazardController extends EventEmitter {
                             )
                         };
 
-                        // get AI response for the hazard
-                        const aiResponse = await AIController.handleUserInput("What's the current road condition?", hazardInfo);
-                        
-                        // emit both the hazard info and the AI's conversational response
-                        this.emit('newHazard', {
-                            ...hazardInfo,
-                            aiResponse
-                        });
+                        try {
+                            // get AI response for the hazard
+                            const aiResponse = await AIController.handleUserInput("What's the current road condition?", hazardInfo);
+                            hazardInfo.aiResponse = aiResponse;
+                            
+                            // emit both the hazard info and the AI's conversational response
+                            this.emit('newHazard', hazardInfo);
+                        } catch (aiError) {
+                            console.error('Error getting AI response for hazard:', aiError);
+                            this.emit('error', { type: 'ai_response', error: aiError.message });
+                        }
                     }
                 }
+            }
+
+            // If no new hazards were found, emit a noHazard event
+            if (!hazardsFound) {
+                this.emit('noHazard', {
+                    position: {
+                        lat: position.lat,
+                        lng: position.lng
+                    },
+                    timestamp: new Date().toISOString()
+                });
             }
 
             this.lastCheckedHazards = currentHazards;
             return { success: true, hazardsCount: currentHazards.size };
         } catch (error) {
             console.error('Error fetching hazards:', error);
+            this.emit('error', { type: 'hazard_fetch', error: error.message });
             return { 
                 success: false, 
                 error: error.response?.data?.message || error.message 
@@ -130,7 +152,7 @@ class HazardController extends EventEmitter {
                 return [];
             }
 
-            console.log('Snapped points:', response.data.snappedPoints);
+            // console.log('Snapped points:', response.data.snappedPoints);
 
             return response.data.snappedPoints;
         } catch (error) {
@@ -192,13 +214,14 @@ class HazardController extends EventEmitter {
     }
 
     generatePointsAroundPosition(position, radius) {
+
         // generate points in a square around the position
         const points = [];
         const latStep = radius / 111320; // 1 degree latitude ≈ 111.32 km
         const lngStep = radius / (111320 * Math.cos(position.lat * Math.PI / 180));
 
         // generate points centered on the actual position
-        points.push(position); // Include the center point
+        points.push(position); // include the center point
         points.push({ lat: position.lat + latStep, lng: position.lng + lngStep });
         points.push({ lat: position.lat + latStep, lng: position.lng - lngStep });
         points.push({ lat: position.lat - latStep, lng: position.lng + lngStep });

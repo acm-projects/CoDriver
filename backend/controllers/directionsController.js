@@ -5,8 +5,8 @@ class DirectionsController {
     async getDirections(origin, destination) {
         try {
             console.log('Fetching directions from Google Maps API...');
-            console.log('Origin:', origin);
-            console.log('Destination:', destination);
+            //console.log('Origin:', origin);
+            //console.log('Destination:', destination);
 
             // URL encode the origin and destination
             const encodedOrigin = encodeURIComponent(origin);
@@ -22,7 +22,7 @@ class DirectionsController {
                 throw new Error('No route found');
             }
 
-            // Extract turn-by-turn instructions with location data
+            // extract turn-by-turn instructions with location data
             const steps = response.data.routes[0].legs[0].steps;
             const instructions = steps.map(step => ({
                 instruction: step.html_instructions.replace(/<[^>]*>/g, ''), // removing HTML tags

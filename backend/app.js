@@ -15,7 +15,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // middleware
 app.use(express.json());
@@ -25,29 +25,29 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // endpoints to handle user input and generate a response- might move to routes folder
 
 // endpoint goes directly to aiController, skipping commandController
-app.post('/conversation', async (req, res) => {
-  const { userInput } = req.body;
+// app.post('/conversation', async (req, res) => {
+//   const { userInput } = req.body;
 
 
-if (!userInput) {
-  return res.status(400).json({ error: 'User input is required' });
-}
+// if (!userInput) {
+//   return res.status(400).json({ error: 'User input is required' });
+// }
 
-try {
+// try {
   
-  const aiResponse = await AIController.handleUserInput(userInput);
-  //const aiResponse = await AIController.getDeepSeekResponse(userInput);
-  res.json({
-    message: 'Conversation successful',
-    userInput,
-    aiResponse,
-  });
+//   const aiResponse = await AIController.handleUserInput(userInput);
+//   //const aiResponse = await AIController.getDeepSeekResponse(userInput);
+//   res.json({
+//     message: 'Conversation successful',
+//     userInput,
+//     aiResponse,
+//   });
 
-} catch (error) {
-  console.error('Error handling conversation:', error);
-  res.status(500).json({ error: 'Failed to generate response' });
-}
-});
+// } catch (error) {
+//   console.error('Error handling conversation:', error);
+//   res.status(500).json({ error: 'Failed to generate response' });
+// }
+// });
 
 // endpoimt for command controller (music, weather, etc)
 app.post('/command', async (req, res) => {
@@ -200,7 +200,7 @@ app.post('/api/navigation/generate-route', async (req, res) => {
     }
 });
 
-// add this route to your Express app
+// 
 app.post('/api/navigation/start', async (req, res) => {
     try {
         const { origin, destination } = req.body;
@@ -235,13 +235,9 @@ wss.on('connection', (ws) => {
     // handle navigation and hazard events
     ws.on('message', async (message) => {
         try {
-            console.log('Raw message received:', message);
-            console.log('Message type:', typeof message);
-            
             let data;
             try {
                 data = JSON.parse(message.toString());
-                console.log('Parsed data:', data);
             } catch (parseError) {
                 console.error('Error parsing message:', parseError);
                 ws.send(JSON.stringify({ error: 'Invalid JSON format' }));
@@ -254,12 +250,22 @@ wss.on('connection', (ws) => {
                     data.origin,
                     data.destination
                 );
-                // start hazard monitoring with the origin position
-                await hazardController.startHazardMonitoring(data.origin);
-                console.log('Sending initial navigation result:', result);
+                
+                // Start hazard monitoring with the origin position
+                try {
+                    await hazardController.startHazardMonitoring(data.origin);
+                    console.log('Hazard monitoring started');
+                } catch (hazardError) {
+                    console.error('Error starting hazard monitoring:', hazardError);
+                }
+                
                 if (ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify(result));
                 }
+            } else if (data.type === 'stopNavigation') {
+                NavigationController.stopNavigation();
+                hazardController.stopHazardMonitoring();
+                ws.send(JSON.stringify({ type: 'stopped', message: 'Navigation and hazard monitoring stopped' }));
             } else {
                 console.log('Unknown message type:', data.type);
             }
@@ -274,64 +280,46 @@ wss.on('connection', (ws) => {
     // handle hazard events
     hazardController.on('newHazard', (hazardInfo) => {
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-                type: 'hazard',
-                data: {
-                    type: hazardInfo.type,
-                    subtype: hazardInfo.subtype,
-                    location: {
-                        lat: hazardInfo.location.lat,
-                        lng: hazardInfo.location.lng
-                    },
-                    description: hazardInfo.description,
-                    distance: hazardInfo.distance
-                }
-            }));
+            try {
+                ws.send(JSON.stringify({
+                    type: 'hazard',
+                    data: {
+                        type: hazardInfo.type,
+                        severity: hazardInfo.severity,
+                        location: {
+                            lat: hazardInfo.location.lat,
+                            lng: hazardInfo.location.lng
+                        },
+                        description: hazardInfo.description,
+                        distance: hazardInfo.distance,
+                        aiResponse: hazardInfo.aiResponse,
+                        timestamp: new Date().toISOString()
+                    }
+                }));
+            } catch (error) {
+                console.error('Error sending hazard update:', error);
+            }
         }
     });
 
-    // handle navigation events
-    // NavigationController.on('newInstruction', async (instruction) => {
-    //     if (ws.readyState === WebSocket.OPEN) {
-    //         // try {
-    //         //     // Format the instruction using AI controller
-    //         //     const formattedInstruction = await AIController.formatNavigationInstruction(instruction);
-    //         //     ws.send(JSON.stringify({
-    //         //         type: 'instruction',
-    //         //         data: {
-    //         //             ...formattedInstruction,
-    //         //             timestamp: new Date().toISOString(),
-    //         //             stepNumber: NavigationController.currentStepIndex + 1,
-    //         //             totalSteps: NavigationController.currentRoute.length
-    //         //         }
-    //         //     }));
-    //         // } catch (error) {
-    //         //     console.error('Error formatting navigation instruction:', error);
-    //         //     // Fallback to original instruction if formatting fails
-    //         //     ws.send(JSON.stringify({
-    //         //         type: 'instruction',
-    //         //         data: {
-    //         //             ...instruction,
-    //         //             timestamp: new Date().toISOString(),
-    //         //             stepNumber: NavigationController.currentStepIndex + 1,
-    //         //             totalSteps: NavigationController.currentRoute.length
-    //         //         }
-    //         //     }));
-    //         // }
+    // handle no hazard events
+    hazardController.on('noHazard', (data) => {
+        if (ws.readyState === WebSocket.OPEN) {
+            try {
+                ws.send(JSON.stringify({
+                    type: 'noHazard',
+                    data: {
+                        message: 'No hazards detected in the area',
+                        position: data.position,
+                        timestamp: data.timestamp
+                    }
+                }));
+            } catch (error) {
+                console.error('Error sending no hazard update:', error);
+            }
+        }
+    });
 
-    //         try {
-    //           ws.send(JSON.stringify({
-    //             type: 'instruction',
-    //             data: {
-    //               ...instruction,
-    //               timestamp: new Date().toISOString(),
-    //             }
-    //           }));
-    //         } catch (error) {
-    //           console.error('Error sending instruction:', error);
-    //         }
-    //     }
-    // });
     NavigationController.on('newInstruction', async (instruction) => {
       try {
         ws.send(JSON.stringify({
@@ -347,37 +335,6 @@ wss.on('connection', (ws) => {
 
     NavigationController.on('approachingTurn', async (event) => {
         if (ws.readyState === WebSocket.OPEN) {
-            // try {
-            //     // Format the approaching turn instruction using AI controller
-            //     const formattedInstruction = await AIController.formatNavigationInstruction({
-            //         instruction: `Approaching turn: ${event.instruction.instruction} (${event.distance}m away)`,
-            //         distance: event.distance,
-            //         duration: 'coming up soon'
-            //     });
-            //     ws.send(JSON.stringify({
-            //         type: 'approachingTurn',
-            //         data: {
-            //             ...event,
-            //             instruction: formattedInstruction.instruction,
-            //             timestamp: new Date().toISOString(),
-            //             stepNumber: NavigationController.currentStepIndex + 1,
-            //             totalSteps: NavigationController.currentRoute.length
-            //         }
-            //     }));
-            // } catch (error) {
-            //     console.error('Error formatting approaching turn instruction:', error);
-            //     // Fallback to original instruction if formatting fails
-            //     ws.send(JSON.stringify({
-            //         type: 'approachingTurn',
-            //         data: {
-            //             ...event,
-            //             timestamp: new Date().toISOString(),
-            //             stepNumber: NavigationController.currentStepIndex + 1,
-            //             totalSteps: NavigationController.currentRoute.length
-            //         }
-            //     }));
-            // }
-
             try {
               ws.send(JSON.stringify({
                 type: 'approachingTurn',
@@ -396,7 +353,7 @@ wss.on('connection', (ws) => {
             ws.send(JSON.stringify({
                 type: 'complete',
                 data: {
-                    message: "Great job! You've reached your destination, slay",
+                    message: "Great job! You've reached your destination.",
                     timestamp: new Date().toISOString()
                 }
             }));
@@ -441,7 +398,7 @@ app.get('/api/hazards/current', async (req, res) => {
 app.post('/api/simulation/enable', (req, res) => {
     try {
         NavigationController.isSimulationMode = true;
-        console.log('Simulation mode enabled');
+        console.log('Simulation mode enabled through /api/simulation/enable');
         res.json({ message: 'Simulation mode enabled' });
     } catch (error) {
         console.error('Error enabling simulation mode:', error);
@@ -466,11 +423,6 @@ app.post('/api/simulation/location', (req, res) => {
 
 
 
-
-
-
-
-
 // simulation test route
 app.post('/api/simulation/test', (req, res) => {
   const { origin, destination } = req.body;
@@ -480,92 +432,96 @@ app.post('/api/simulation/test', (req, res) => {
 
 
 app.post("/startSimulationDirections", async (req, res) => {
-  const {destination } = req.body;
+  const { destination } = req.body;
 
   if (!destination) {
     return res.status(400).json({ error: 'Destination is required' });
   }
 
-  startNavigationTest(destination);
-}
-);
+  try {
+    // Connect to WebSocket
+    const ws = new WebSocket('ws://localhost:3000');
+    
+    ws.on('open', async () => {
+      console.log('Connected to server');
 
+      // Enable simulation mode
+      await axios.post('http://localhost:3000/api/simulation/enable');
 
+      // Start navigation
+      const response = await axios.post('http://localhost:3000/api/navigation/start', {
+        origin: "16080 Lyndon B Johnson Fwy, Mesquite, TX 75150",
+        destination
+      });
 
+      // Get route points from the response
+      const routePoints = response.data.routePoints;
+      console.log(`Simulating navigation through ${routePoints.length} points`);
 
-// simulation test route websocket and endpoints 
+      // Start hazard monitoring with the first point
+      try {
+        await hazardController.startHazardMonitoring(routePoints[0]);
+        console.log('Hazard monitoring started');
+      } catch (hazardError) {
+        console.error('Error starting hazard monitoring:', hazardError);
+      }
 
+      // Simulate movement through the route points
+      for (const point of routePoints) {
+        await updatePosition(point.lat, point.lng);
+        await new Promise(resolve => setTimeout(resolve, 5000)); // wait 5 seconds between updates
+      }
+
+      // Stop hazard monitoring and navigation when complete
+      hazardController.stopHazardMonitoring();
+      NavigationController.stopNavigation();
+    });
+
+    // Handle WebSocket messages
+    ws.on('message', (data) => {
+      const message = JSON.parse(data);
+      console.log('Received:', message);
+    });
+
+    // Handle WebSocket errors
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+
+    // Handle WebSocket close
+    ws.on('close', () => {
+      console.log('Disconnected from server');
+      hazardController.stopHazardMonitoring();
+      NavigationController.stopNavigation();
+    });
+
+    res.json({ message: 'Simulation started successfully' });
+  } catch (error) {
+    console.error('Error in simulation:', error);
+    res.status(500).json({ error: 'Failed to start simulation' });
+  }
+});
+
+// Update the updatePosition function to handle hazard monitoring
 async function updatePosition(lat, lng) {
   try {
-      // update the app's simulated location directly
-      await axios.post('http://localhost:3000/api/simulation/location', {
-          lat,
-          lng,
-          accuracy: 10
-      });
-      console.log(`Updated position to: ${lat}, ${lng}`);
+    // Update the app's simulated location
+    await axios.post('http://localhost:3000/api/simulation/location', {
+      lat,
+      lng,
+      accuracy: 10
+    });
+    
+    // Only check for hazards if we're not already monitoring on an interval
+    if (hazardController.isMonitoring && !hazardController.watchId) {
+      await hazardController.checkForHazards({ lat, lng });
+    }
+    
+    console.log(`Updated position to: ${lat}, ${lng}`);
   } catch (error) {
-      console.error('Error updating position:', error);
+    console.error('Error updating position:', error);
   }
 }
-
-async function startNavigationTest(destination) {
-  try {
-      // define start and end points- make input variable when integrating with frontend
-      const origin = "2800 Waterview Pkwy, Richardson, TX 75080";
-      // const destination = "242 W Campbell Rd, Richardson, TX 75080";
-
-      // connect to websocket
-      const ws = new WebSocket('ws://localhost:3000');
-      
-      ws.on('open', async () => {
-          console.log('Connected to server');
-
-          // enable simulation mode
-          await axios.post('http://localhost:3000/api/simulation/enable');
-          console.log('Simulation mode enabled');
-
-          // start navigation
-          const response = await axios.post('http://localhost:3000/api/navigation/start', {
-              origin,
-              destination
-          });
-          console.log('Navigation started:', response.data);
-
-          // get route points from the response
-          const routePoints = response.data.routePoints;
-          console.log(`Simulating navigation through ${routePoints.length} points`);
-
-          // simulate movement through the route points
-          for (const point of routePoints) {
-              await updatePosition(point.lat, point.lng);
-              await new Promise(resolve => setTimeout(resolve, 5000)); // wait 5 seconds between updates- could change this to be the duration of each navigation step
-          }
-      });
-
-      // handle websocket messages
-      ws.on('message', (data) => {
-          const message = JSON.parse(data);
-          console.log('Received:', message);
-      });
-
-      // handle websocket errors
-      ws.on('error', (error) => {
-          console.error('WebSocket error:', error);
-      });
-
-      // handle websocket close
-      ws.on('close', () => {
-          console.log('Disconnected from server');
-      });
-
-  } catch (error) {
-      console.error('Error in navigation test:', error);
-  }
-}
-
-// start the test -- make an endpoint for this in the app.js when integrating with frontend
-// startNavigationTest(); 
 
 server.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

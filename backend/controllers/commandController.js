@@ -16,8 +16,6 @@ class CommandController {
                 //const city = WeatherController.extractCity(userInput);
                 const weatherData = await WeatherController.getWeather(city);
                 
-                // old DeepSeek call
-                // const aiResponse = await AIController.getDeepSeekResponse(
                 
                 // new Claude call (sm better omg)
                 const aiResponse = await AIController.getClaudeResponse(

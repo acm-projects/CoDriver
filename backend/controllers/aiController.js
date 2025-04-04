@@ -18,7 +18,7 @@ class AIController {
 
 
     // new Claude response method
-    async getClaudeResponse(userInput, sessionId, context = 'general', weatherData = null, hazardData = null) {
+    async getClaudeResponse(userInput, sessionId, context = 'general', weatherData, hazardData) {
         try {
 
             if (!sessionId) {
@@ -52,12 +52,6 @@ class AIController {
                 max_tokens: 50,
                 temperature: 0.8,
                 system: systemPrompt,
-                // messages: [
-                //     {
-                //         role: 'user',
-                //         content: this.sessionHistory[sessionId] // Pass the entire message history for deepseek
-                //     }
-                // ]
                 messages: this.sessionHistory[sessionId]
             });
 
@@ -109,20 +103,6 @@ class AIController {
             
             hazard: this.buildHazardPrompt(hazardData),
             
-            // navigation: `You are a friendly passenger giving navigation instructions. Make the instructions sound natural and conversational.
-            //             Convert the given navigation instruction into a more human-like format.
-            //             Keep the instruction clear and concise (maximum 1-2 sentences).
-            //             Make it sound like a friend giving directions from the passenger seat.
-            //             Examples:
-            //             - Instead of "Turn right on Main Street", say "Hey, you'll want to turn right on Main Street up ahead"
-            //             - Instead of "In 100 meters, turn left", say "Coming up soon, you'll need to make a left turn"
-            //             - Instead of "Make a U-turn", say "You'll need to make a U-turn at the next opportunity"
-            //             - Instead of "Continue straight", say "Just keep going straight ahead"
-            //             - Instead of "Merge onto highway", say "You'll need to merge onto the highway coming up"
-            //             Include any distance or duration information naturally in the sentence.
-            //             If there's a specific maneuver, make it sound more natural and friendly.
-            //             If the instruction includes a street name, mention it naturally in the sentence.`,
-            
             jokes: "You are a friendly driving companion who tells jokes. Keep jokes extremely short and road-appropriate. One-liners are preferred. Make jokes about cars, vehicles, or interesting driving facts.",
             
             wordGames: "You are hosting a quick word game while driving. Keep it extremely simple and brief (1-2 sentences max). Focus on simple games like 'I Spy' or quick word associations.",
@@ -138,6 +118,7 @@ class AIController {
         }
 
         const w = weatherData.data;
+        console.log('Weather data:', w);
         return `You are a helpful assistant providing weather information. 
                 Current conditions in ${w.city}: ${w.description}, ${w.temperature}°C, feels like ${w.feelsLike}°C, 
                 humidity ${w.humidity}%, wind speed ${w.windSpeed} m/s. 

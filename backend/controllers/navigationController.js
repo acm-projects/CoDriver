@@ -3,6 +3,7 @@ const EventEmitter = require('events');
 const axios = require('axios');
 require('dotenv').config();
 const AIController = require('./aiController');
+const hazardController = require('./hazardController');
 
 class NavigationController extends EventEmitter {
     constructor() {
@@ -163,6 +164,8 @@ class NavigationController extends EventEmitter {
         
         // check if approaching next turn
         await this.checkApproachingTurn(currentPosition);
+
+        await this.checkHazardousConditions(currentPosition);
         
         if (this.hasReachedNextPoint(currentPosition)) {
             console.log('Reached next navigation point');
@@ -178,20 +181,22 @@ class NavigationController extends EventEmitter {
                 const nextStep = this.currentRoute[this.currentStepIndex];
                 // reset warning flag when moving to new step and format instruction
                 this.hasWarnedForCurrentStep = false;
-            //     const formattedStep = await AIController.formatNavigationInstruction({
-            //         instruction: nextStep.instruction,
-            //         distance: this.calculateDistance(
-            //             currentPosition.lat,
-            //             currentPosition.lng,
-            //             this.getStepLocation(nextStep).lat,
-            //             this.getStepLocation(nextStep).lng
-            //         ),
-            //         duration: nextStep.duration,
-            //         maneuver: nextStep.maneuver
-            //     });
                 
                this.emit('newInstruction', nextStep);
             }
+        }
+    }
+
+    async checkHazardousConditions(currentPosition) {
+        // Check for hazardous conditions using AIController
+        try {
+            const hazards = await hazardController.checkForHazards(currentPosition);
+            if (hazards && hazards.length > 0) {
+                console.log('Hazardous conditions detected:', hazards);
+                this.emit('hazardousConditions', hazards);
+            }
+        } catch (error) {
+            console.error('Error checking hazardous conditions:', error);
         }
     }
 
@@ -214,7 +219,7 @@ class NavigationController extends EventEmitter {
         // emit warning when within 100 meters of the next turn
         const APPROACH_WARNING_THRESHOLD = 100; // meters
         if (distance <= APPROACH_WARNING_THRESHOLD) {
-            console.log('Approaching next turn:', nextStep);
+            // console.log('Approaching next turn:', nextStep);
             
             const formattedWarning = await AIController.formatNavigationInstruction({
                 instruction: nextStep.instruction,
@@ -297,11 +302,11 @@ class NavigationController extends EventEmitter {
         lat2 = Number(lat2);
         lng2 = Number(lng2);
 
-        // Log the points being compared
-        console.log('Calculating distance between:', 
-            { point1: { lat: lat1, lng: lng1 }, 
-              point2: { lat: lat2, lng: lng2 }
-            });
+        // log the points being compared
+        // console.log('Calculating distance between:', 
+        //     { point1: { lat: lat1, lng: lng1 }, 
+        //       point2: { lat: lat2, lng: lng2 }
+        //     });
 
         const R = 6371e3; // Earth's radius in meters
         const φ1 = lat1 * Math.PI / 180;
@@ -315,7 +320,7 @@ class NavigationController extends EventEmitter {
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
         const distance = R * c;
-        console.log('Calculated distance:', distance, 'meters');
+        // console.log('Calculated distance:', distance, 'meters');
         return distance;
     }
 
@@ -482,11 +487,11 @@ class NavigationController extends EventEmitter {
                 isNavigationPoint: true
             });
 
-            // For each step in the route
+            // for each step in the route
             for (let i = 0; i < route.length; i++) {
                 const step = route[i];
                 
-                // Add intermediate points between start and end
+                // add intermediate points between start and end
                 const start = step.start_location;
                 const end = step.end_location;
                 const stepDistance = this.calculateDistance(
@@ -494,10 +499,10 @@ class NavigationController extends EventEmitter {
                     end.lat, end.lng
                 );
 
-                // Calculate number of intermediate points
+                // calculate number of intermediate points
                 const numPoints = Math.max(1, Math.floor(stepDistance / POINT_SPACING));
 
-                // Add intermediate points
+                // add intermediate points
                 for (let j = 1; j < numPoints; j++) {
                     const fraction = j / numPoints;
                     points.push({
@@ -507,7 +512,7 @@ class NavigationController extends EventEmitter {
                     });
                 }
 
-                // Add the end point of this step
+                // add the end point of this step
                 points.push({
                     lat: end.lat,
                     lng: end.lng,
@@ -525,7 +530,7 @@ class NavigationController extends EventEmitter {
 
 
     isKeyNavigationPoint(position) {
-        // Check if this position represents a significant navigation point
+        // check if this position represents a significant navigation point
         // like turns, exits, or major intersections
         if (!this.currentRoute || !this.currentRoute[this.currentStepIndex]) {
             return false;
