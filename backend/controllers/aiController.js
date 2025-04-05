@@ -67,7 +67,7 @@ class AIController {
             for (const [command, details] of Object.entries(musicCommands)) {
                 if (aiResponse.includes(command)) {
                     try {
-                        await axios.post(`http://localhost:3000${details.endpoint}`);
+                        await axios.post(`http://localhost:8000${details.endpoint}`);
                         return details.action;
                     } catch (error) {
                         console.error('Error executing music command:', error);

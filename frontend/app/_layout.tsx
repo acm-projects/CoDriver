@@ -5,7 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-
+import React from 'react';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -19,13 +19,19 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
+      console.log('Fonts loaded successfully');
       SplashScreen.hideAsync();
+    } else if(!loaded){
+      // Optionally, you can show a loading indicator or a placeholder here
+      console.log('Fonts are still         loading...');
+      return;
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
+  // if (!loaded) {
+  //   console.log('Fonts are still loading...');
+  //   return null;
+  // }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

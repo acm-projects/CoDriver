@@ -99,16 +99,16 @@ class CommandController {
             console.log("music command received");
             // Keyword was recognized and is now matched to route
             if ('play' in music) {
-                const response = await axios.post('http://localhost:3000/api/music/play');
+                const response = await axios.post('http://localhost:8000/api/music/play');
                 return response.data;
             } else if ('pause' in music) {
-                const response = await axios.post('http://localhost:3000/api/music/pause');
+                const response = await axios.post('http://localhost:8000/api/music/pause');
                 return response.data;
             } else if ('next' in music) {
-                const response = await axios.post('http://localhost:3000/api/music/next');
+                const response = await axios.post('http://localhost:8000/api/music/next');
                 return response.data;
             } else if ('previous' in music) {
-                const response = await axios.post('http://localhost:3000/api/music/previous');
+                const response = await axios.post('http://localhost:8000/api/music/previous');
                 return response.data;
             }
             
