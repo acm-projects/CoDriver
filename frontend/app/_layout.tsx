@@ -18,20 +18,16 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (loaded) {
+    //if (loaded) {
       console.log('Fonts loaded successfully');
       SplashScreen.hideAsync();
-    } else if(!loaded){
-      // Optionally, you can show a loading indicator or a placeholder here
-      console.log('Fonts are still         loading...');
-      return;
-    }
+    //} 
   }, [loaded]);
 
-  // if (!loaded) {
-  //   console.log('Fonts are still loading...');
-  //   return null;
-  // }
+  if (!loaded) {
+    console.log('Fonts are still loading...');
+    //return null;
+  }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

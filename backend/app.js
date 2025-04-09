@@ -18,10 +18,13 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 
+
 // import routes
 const router = require("./routes/users");
 const historyRoutes = require("./routes/history");
 const errorHandler = require("./middlewares/errorHandler");
+const isAuthenticated = require('./middlewares/isAuth');
+const User = require('./model/User');
 
 const port = process.env.PORT || 8000;
 
@@ -73,6 +76,9 @@ app.post('/command', async (req, res) => {
   }
 
   try {
+    // Update the last user interaction time in AIController
+    AIController.updateLastUserInteraction();
+    
     // Process through command controller which will handle both specific commands and AI conversations
     const response = await commandController.processCommand(inputText, sessionId, city);
     res.json(response);
@@ -518,6 +524,140 @@ async function updatePosition(lat, lng) {
     console.error('Error updating position:', error);
   }
 }
+
+app.post("/changeTemperature", async (req, res) => {
+  // add a check for user authentication later
+  const { temperature, userId } = req.body;
+
+  if (temperature === undefined) {
+    return res.status(400).json({ error: 'Temperature is required' });
+  }
+
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  try {
+    // Update AI controller temperature
+    const result = await AIController.changeTemperature(temperature);
+    
+    // Update user's temperature in database
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { 'aiSettings.temperature': temperature },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      message: 'Temperature updated successfully',
+      temperature: user.aiSettings.temperature
+    });
+  } catch (error) {
+    console.error('Error changing temperature:', error);
+    res.status(500).json({ error: 'Failed to change temperature' });
+  }
+});
+
+app.post("/setHumorLevel", async (req, res) => {
+  const { humorLevel, userId } = req.body;
+
+  if (humorLevel === undefined) {
+    return res.status(400).json({ error: 'Humor level is required' });
+  }
+
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  try {
+    // Update AI controller humor level
+    const result = await AIController.changeHumorLevel(humorLevel);
+    
+    if (!result.success) {
+      return res.status(400).json({ error: result.error || 'Failed to set humor level' });
+    }
+    
+    // Update user's humor level in database
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { 'aiSettings.humorLevel': humorLevel },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      message: 'Humor level updated successfully',
+      humorLevel: user.aiSettings.humorLevel,
+      style: result.style
+    });
+  } catch (error) {
+    console.error('Error setting humor level:', error);
+    res.status(500).json({ error: 'Failed to set humor level' });
+  }
+});
+
+app.post("/setFrequency", async (req, res) => {
+  const { frequency, userId } = req.body;
+
+  if (frequency === undefined) {
+    return res.status(400).json({ error: 'Frequency is required' });
+  }
+
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  try {
+    // Update AI controller frequency
+    const result = await AIController.changeBotFrequency(frequency);
+    
+    // Update user's frequency in database
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { 'aiSettings.frequency': frequency },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      message: 'Frequency updated successfully',
+      frequency: user.aiSettings.frequency
+    });
+  } catch (error) {
+    console.error('Error setting frequency:', error);
+    res.status(500).json({ error: 'Failed to set frequency' });
+  }
+});
+
+// endpoint to get user's AI settings
+app.get("/api/ai-settings/:userId", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      temperature: user.aiSettings.temperature,
+      humorLevel: user.aiSettings.humorLevel,
+      frequency: user.aiSettings.frequency
+    });
+  } catch (error) {
+    console.error('Error fetching AI settings:', error);
+    res.status(500).json({ error: 'Failed to fetch AI settings' });
+  }
+});
 
 server.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
