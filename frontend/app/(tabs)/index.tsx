@@ -13,11 +13,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import * as Speech from 'expo-speech';
+import addressData from '../../assets/addresses.json';
 
 export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(true);
   const [loading, setLoading] = useState(false);
   const [destination, setDestination] = useState(''); // Added state for destination
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   const rippleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0.5)).current;
@@ -87,6 +89,20 @@ export default function HomeScreen() {
     setLoading(false);
   };
 
+  const handleInputChange = (text: string) => {
+      setDestination(text);
+    
+      if (text.length > 1) {
+        const filtered = addressData.filter((address: string) =>
+          address.toLowerCase().includes(text.toLowerCase())
+        );
+        setSuggestions(filtered.slice(0, 5)); // Limit to 5 suggestions
+      } else {
+        setSuggestions([]);
+      }
+    };
+    
+
   const handleFeelingLucky = () => {
     setModalVisible(false);
     // You can add logic here to use the 'destination' state if needed
@@ -132,13 +148,27 @@ export default function HomeScreen() {
 
             <Text style={styles.popupTitle}>Hello User</Text>
             <TextInput
-              style={styles.input}
-              placeholder="Where are you heading today?"
-              placeholderTextColor="rgba(255, 255, 255, 0.6)"
-              value={destination} // Bind the value to the destination state
-              onChangeText={setDestination} // Update the state when text changes
-              selectionColor="white" // Added to make the cursor white
+                style={styles.input}
+                placeholder="Where are you heading today?"
+                placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                value={destination}
+                onChangeText={handleInputChange}
+                selectionColor="white"
             />
+
+            {suggestions.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => {
+                  setDestination(item);
+                  setSuggestions([]); // Clear suggestions
+                }}
+                style={styles.suggestionItem}
+              >
+                <Text style={styles.suggestionText}>{item}</Text>
+              </TouchableOpacity>
+            ))}
+
 
             <TouchableOpacity style={styles.button} onPress={() => setModalVisible(false)}>
               <Text style={styles.buttonText}>Go to Address</Text>
@@ -254,4 +284,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 50,
   },
+  suggestionItem: {
+      alignSelf: 'flex-start',
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      borderRadius: 1,
+      marginVertical: 2,
+      width: '90%',
+    },
+    
+    suggestionText: {
+      color: 'white',
+      fontSize: 12,
+    },
+    
 });

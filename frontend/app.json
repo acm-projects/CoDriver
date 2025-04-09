@@ -32,7 +32,8 @@
       "policy": "sdkVersion"
     },
     "plugins": [
-      "./plugins/withAndroidMicrophone"
+      "./plugins/withAndroidMicrophone",
+      "expo-asset"
     ]
   }
 }
