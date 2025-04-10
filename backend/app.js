@@ -23,17 +23,18 @@ const WeatherController = require('./controller/weatherController');
 
 // Initialize express app and server
 const app = express();
-const cors = require("cors");
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
 // Enable CORS
 app.use(cors());
 
-//! Connect to mongodb
+// Connect to MongoDB
 require("dotenv").config();
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("Db connected successfully"))
-  .catch((e) => console.log(e));
+  .then(() => console.log("DB connected successfully"))
+  .catch((e) => console.log("MongoDB connection error:", e));
 
 // Middlewares
 app.use(cors());
