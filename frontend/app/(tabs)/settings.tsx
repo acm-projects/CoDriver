@@ -7,15 +7,23 @@ import {
   Text,
   TouchableOpacity,
   Switch,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { Ionicons } from '@expo/vector-icons';
+import AISettingsSlider from '../../components/AISettingsSlider';
+//import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
+
 
 export default function Example() {
   const [drivingSuggestions, setDrivingSuggestions] = useState(false);
   const router = useRouter();
+  // ANUSHA-Mock user ID for testing - replace with actual user ID from authentication
+  const userId = "67f4838bb472b62e1ce8bc43";
 
   const toggleDrivingSuggestions = (value: boolean) => {
     setDrivingSuggestions(value);
@@ -24,6 +32,11 @@ export default function Example() {
   // Function to navigate to the login screen
   const navigateToLogin = () => {
     router.push('/login');
+  };
+
+  // ANUSHA handle AI settings changes
+  const handleAISettingsChange = (settings: any) => {
+    console.log('AI settings updated:', settings);
   };
 
   return (
@@ -38,86 +51,100 @@ export default function Example() {
         </View>
         <Text style={styles.waveTitle}>Settings</Text>
       </View>
-      <View style={styles.container}>
-        <View style={styles.header}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }}>
+        <View style={styles.container}>
+          <View style={styles.header}>
 
-          <MaskedView
-            maskElement={<Text style={styles.gradientTitle}>CoDriver</Text>}>
-            <LinearGradient colors={['#FF822F', '#FFFFFF']} start={[0, 0]} end={[1, 1]}>
-              {/* No need for another Text component here */}
-            </LinearGradient>
-          </MaskedView>
-        </View>
-        <View style={styles.profileContainer}>
-          <Image
-            source={{
-              uri: 'https://static.vecteezy.com/system/resources/thumbnails/009/734/564/small_2x/default-avatar-profile-icon-of-social-media-user-vector.jpg',
-            }}
-            style={styles.profileImage}
-          />
-          <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>Sourish Reddy</Text>
-        </View>
-        <View style={styles.toggleContainer}>
-          <Text style={styles.toggleText}>Driving Suggestions</Text>
-          <Switch
-            value={drivingSuggestions}
-            onValueChange={toggleDrivingSuggestions}
-            trackColor={{ false: "#767577", true: "#FF822F" }}
-            thumbColor={drivingSuggestions ? "#FFFFFF" : "#f4f3f4"}
-          />
-        </View>
-        <View style={styles.companionSection}>
-          <TouchableOpacity style={styles.chevronButton}>
-            <Text style={styles.chevronText}>Companion</Text>
-            <Ionicons name="chevron-forward" size={18} color="white" />
-          </TouchableOpacity>
+            <MaskedView
+              maskElement={<Text style={styles.gradientTitle}>CoDriver</Text>}>
+              <LinearGradient colors={['#FF822F', '#FFFFFF']} start={[0, 0]} end={[1, 1]}>
+                {/* No need for another Text component here */}
+              </LinearGradient>
+            </MaskedView>
+          </View>
+          <View style={styles.profileContainer}>
+            <Image
+              source={{
+                uri: 'https://static.vecteezy.com/system/resources/thumbnails/009/734/564/small_2x/default-avatar-profile-icon-of-social-media-user-vector.jpg',
+              }}
+              style={styles.profileImage}
+            />
+            <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>Sourish Reddy</Text>
+          </View>
+          
+          <View style={styles.toggleContainer}>
+            <Text style={styles.toggleText}>Driving Suggestions</Text>
+            <Switch
+              value={drivingSuggestions}
+              onValueChange={toggleDrivingSuggestions}
+              trackColor={{ false: "#767577", true: "#FF822F" }}
+              thumbColor={drivingSuggestions ? "#FFFFFF" : "#f4f3f4"}
+            />
+      
+            
+          </View>
+          
+          {/* ANUSHA AI Settings Slider Component - Only show when driving suggestions is on */}
+          {/* {drivingSuggestions && (
+            <AISettingsSlider 
+              userId={userId}
+              onSettingsChange={handleAISettingsChange}
+            />
+          )} */}
+          
+          <View style={styles.companionSection}>
+            <TouchableOpacity style={styles.chevronButton}>
+              <Text style={styles.chevronText}>Companion</Text>
+              <Ionicons name="chevron-forward" size={18} color="white" />
+            </TouchableOpacity>
 
-        </View>
-        <View style={styles.companionSection}>
-          <TouchableOpacity style={styles.chevronButton}>
-            <Text style={styles.chevronText}>Delete Account</Text>
-            <Ionicons name="chevron-forward" size={18} color="white" />
-          </TouchableOpacity>
-        </View>
-        <View style={[styles.companionSection, styles.supportSection]}>
-          <TouchableOpacity style={styles.chevronButton}>
-            <Text style={styles.chevronText}>Support</Text>
-            <Ionicons name="chevron-forward" size={18} color="white" />
-          </TouchableOpacity>
-        </View>
+          </View>
+          <View style={styles.companionSection}>
+            <TouchableOpacity style={styles.chevronButton}>
+              <Text style={styles.chevronText}>Delete Account</Text>
+              <Ionicons name="chevron-forward" size={18} color="white" />
+            </TouchableOpacity>
+          </View>
+          <View style={[styles.companionSection, styles.supportSection]}>
+            <TouchableOpacity style={styles.chevronButton}>
+              <Text style={styles.chevronText}>Support</Text>
+              <Ionicons name="chevron-forward" size={18} color="white" />
+            </TouchableOpacity>
+          </View>
 
-        {/* Spotify Connect Button */}
-        <View style={styles.formAction}>
-          <TouchableOpacity
-            onPress={() => {
-              // handle Google sign-in
-            }}>
-            <View style={styles.btn}>
-              {/* Google Logo */}
-              <Image
-                source={{
-                  uri: 'https://e7.pngegg.com/pngimages/4/438/png-clipart-spotify-logo-spotify-mobile-app-computer-icons-app-store-music-free-icon-spotify-miscellaneous-logo.png',
-                }}
-                style={styles.spotifyLogo}
-              />
+          {/* Spotify Connect Button */}
+          <View style={styles.formAction}>
+            <TouchableOpacity
+              onPress={() => {
+                // handle Google sign-in
+              }}>
+              <View style={styles.btn}>
+                {/* Google Logo */}
+                <Image
+                  source={{
+                    uri: 'https://e7.pngegg.com/pngimages/4/438/png-clipart-spotify-logo-spotify-mobile-app-computer-icons-app-store-music-free-icon-spotify-miscellaneous-logo.png',
+                  }}
+                  style={styles.spotifyLogo}
+                />
 
-              <Text style={styles.btnText}>Connect to Spotify</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
+                <Text style={styles.btnText}>Connect to Spotify</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
 
-        {/* Log Out Button */}
-        <View style={styles.formAction}>
-          <TouchableOpacity
-            onPress={() => {
-              router.push('/login');
-            }}>
-            <View style={styles.logOutBtn}>
-              <Text style={styles.logOutBtnText}>Log Out</Text>
-            </View>
-          </TouchableOpacity>
+          {/* Log Out Button */}
+          <View style={styles.formAction}>
+            <TouchableOpacity
+              onPress={() => {
+                router.push('/login');
+              }}>
+              <View style={styles.logOutBtn}>
+                <Text style={styles.logOutBtnText}>Log Out</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

@@ -365,16 +365,7 @@ class AIController {
     // method to generate random conversation starters
     generateConversationStarter() {
         const starters = [
-            "How's the drive going?",
-            "Are you enjoying the journey?",
-            "I noticed we've been quiet for a while. Everything okay?",
-            "Would you like to hear a joke to pass the time?",
-            "I can tell you some interesting facts about cars if you'd like.",
-            "How's the weather outside?",
-            "Would you like to play a quick word game?",
-            "I can help you find a good restaurant nearby if you're hungry.",
-            "Do you have any questions about your route?",
-            "I'm here if you need any assistance with navigation."
+            "Start a conversation with the user",
         ];
         
         // select a random starter based on humor level
