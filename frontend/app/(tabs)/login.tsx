@@ -12,10 +12,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useRouter } from 'expo-router';
 import * as Network from 'expo-network'; // Import expo-network
-
+import { useAuth } from '../../context/AuthContext';
 
 export default function Example() {
   const router = useRouter(); // Hook for navigation
+  const { setToken } = useAuth();
 
   // State for handling form inputs (email & password)
   const [form, setForm] = useState({
@@ -69,6 +70,7 @@ export default function Example() {
       // Only parse if the response is JSON
       if (response.ok) {
         const data = JSON.parse(textResponse);  // Manually parse if it's JSON
+        setToken(data.token); // Store the token in context
         setAlertMessage(data.message);
         setAlertVisible(true); // Show success message
         setTimeout(() => {
@@ -91,12 +93,6 @@ export default function Example() {
       }, 3000);
     }
   };
-
-
-
-
-
-
 
   // Placeholder function for Google Sign Up (yet to be implemented)
   const handleSignUpwithGoogle = () => {

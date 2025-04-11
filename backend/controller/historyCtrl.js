@@ -72,12 +72,13 @@ const historyCtrl = {
     
     const trip = await Trip.findOne({
       _id: req.params.tripId,
-      userId: req.user
+      userId: req.user,
+      status: 'active'  // Only allow adding conversations to active trips
     });
     
     if (!trip) {
       res.status(404);
-      throw new Error("Trip not found");
+      throw new Error("Active trip not found");
     }
     
     // Add user message
@@ -138,10 +139,22 @@ const historyCtrl = {
         throw new Error("Destination is required");
     }
 
+    // Check if there's already an active trip
+    const existingActiveTrip = await Trip.findOne({
+        userId,
+        status: 'active'
+    });
+
+    if (existingActiveTrip) {
+        res.status(400);
+        throw new Error("You already have an active trip. Please end it before starting a new one.");
+    }
+
     const newTrip = await Trip.create({
         userId,
         destination,
         date: new Date(),
+        status: 'active',  // Explicitly set status to active
         conversations: []
     });
 
@@ -149,7 +162,8 @@ const historyCtrl = {
         message: "Trip started successfully",
         tripId: newTrip._id,
         destination: newTrip.destination,
-        date: newTrip.date
+        date: newTrip.date,
+        status: newTrip.status
     });
   }),
 
@@ -158,19 +172,25 @@ const historyCtrl = {
 
     const trip = await Trip.findOne({
         _id: tripId,
-        userId: req.user
+        userId: req.user,
+        status: 'active'  // Ensure we're only ending active trips
     });
 
     if(!trip){
         res.status(404);
-        throw new Error("Trip not found");
+        throw new Error("Active trip not found");
     }
+
+    // Update the trip status to completed
+    trip.status = 'completed';
+    await trip.save();
 
     res.json({
         message: "Trip ended successfully",
         tripId: trip._id,
         destination: trip.destination,
         date: trip.date,
+        status: trip.status,
         conversationsCount: trip.conversations.length
     });
   })
@@ -180,3 +200,6 @@ const historyCtrl = {
 };
 
 module.exports = historyCtrl;
+
+
+

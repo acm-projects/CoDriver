@@ -1,18 +1,71 @@
-import React from 'react';
-import { StyleSheet, SafeAreaView, View, Image, Text, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, SafeAreaView, View, Image, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import * as Network from 'expo-network';
+
+interface Trip {
+  id: string;
+  destination: string;
+  date: string;
+  createdAt: string;
+  time?: string;
+}
 
 export default function HistoryPage() {
   const router = useRouter();
+  const { token } = useAuth();
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [ipAddress, setIpAddress] = useState('');
 
-  const trips = [
-    { name: 'Trip 1', date: '03/01/2025', time: '12:30 PM' },
-    { name: 'Trip 2', date: '03/02/2025', time: '2:00 PM' },
-    { name: 'Trip 3', date: '03/03/2025', time: '5:15 PM' },
-    { name: 'Trip 4', date: '03/04/2025', time: '8:45 AM' },
-    { name: 'Trip 5', date: '03/05/2025', time: '3:00 PM' },
-    { name: 'Trip 6', date: '03/06/2025', time: '10:00 AM' },
-  ];
+  // Get IP Address for API calls
+  useEffect(() => {
+    const getIpAddress = async () => {
+      try {
+        const ip = await Network.getIpAddressAsync();
+        setIpAddress(ip);
+      } catch (error) {
+        console.error('Failed to get IP address:', error);
+      }
+    };
+    getIpAddress();
+  }, []);
+
+  // Fetch trips from backend
+  useEffect(() => {
+    const fetchTrips = async () => {
+      if (!token || !ipAddress) return;
+
+      try {
+        const response = await axios.get(`http://${ipAddress}:8000/api/history/trips`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        // Format the trips data
+        const formattedTrips = response.data.map((trip: any) => ({
+          id: trip.id,
+          destination: trip.destination,
+          date: new Date(trip.date).toLocaleDateString(),
+          time: new Date(trip.date).toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })
+        }));
+
+        setTrips(formattedTrips);
+      } catch (error) {
+        console.error('Error fetching trips:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrips();
+  }, [token, ipAddress]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#1E1E1E' }}>
@@ -37,21 +90,27 @@ export default function HistoryPage() {
         </View>
 
         <View style={styles.historyContainer}>
-          {trips.map((trip, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.btn}
-              onPress={() => router.push(`../conversation?tripTitle=${encodeURIComponent(trip.name)}`)}
-            >
-              <View style={styles.tripContainer}>
-                <Text style={styles.btnText}>{trip.name}</Text>
-                <View style={styles.dateTimeContainer}>
-                  <Text style={styles.dateText}>{trip.date}</Text>
-                  <Text style={styles.timeText}>{trip.time}</Text>
+          {loading ? (
+            <ActivityIndicator size="large" color="#E17636" style={styles.loader} />
+          ) : trips.length === 0 ? (
+            <Text style={styles.noTripsText}>No trips found</Text>
+          ) : (
+            trips.map((trip, index) => (
+              <TouchableOpacity
+                key={trip.id || index}
+                style={styles.btn}
+                onPress={() => router.push(`../conversation?tripId=${encodeURIComponent(trip.id)}`)}
+              >
+                <View style={styles.tripContainer}>
+                  <Text style={styles.btnText}>{trip.destination}</Text>
+                  <View style={styles.dateTimeContainer}>
+                    <Text style={styles.dateText}>{trip.date}</Text>
+                    <Text style={styles.timeText}>{trip.time}</Text>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))
+          )}
         </View>
 
         <View style={styles.formAction}>
@@ -177,6 +236,15 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: '600',
     color: '#fff',
+  },
+  loader: {
+    marginTop: 20,
+  },
+  noTripsText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 

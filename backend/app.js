@@ -4,7 +4,6 @@ const AIController = require('./controllers/aiController');
 const commandController = require('./controllers/commandController');
 const WebSocket = require('ws');
 const axios = require('axios');
-// const weatherController = require('./controllers/weatherController');
 const musicController = require('./controllers/musicController');
 const directionsController = require('./controllers/directionsController');
 const hazardController = require('./controllers/hazardController');
@@ -16,10 +15,6 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const mongoose = require("mongoose");
 const cors = require("cors");
-
-
-
-// import routes
 const router = require("./routes/users");
 const historyRoutes = require("./routes/history");
 const errorHandler = require("./middlewares/errorHandler");
@@ -28,7 +23,9 @@ const User = require('./model/User');
 
 const port = process.env.PORT || 8000;
 
-// middleware
+
+
+// Enable CORS
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
@@ -41,25 +38,49 @@ mongoose
   .then(() => console.log("DB connected successfully"))
   .catch((e) => console.log("MongoDB connection error:", e));
 
-// Routes for users and history
+// Middlewares
+app.use(cors());
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Routes
 app.use("/", router);
 app.use("/api/history", historyRoutes);
 
+// AI conversation endpoint
+app.post("/conversation", async (req, res) => {
+  const { userInput } = req.body;
 
+  if (!userInput) {
+    return res.status(400).json({ error: "User input is required" });
+  }
 
+  try {
+    const aiResponse = await AIController.handleUserInput(userInput);
+    res.json({
+      message: "Conversation successful",
+      userInput,
+      aiResponse,
+    });
+  } catch (error) {
+    console.error("Error handling conversation:", error);
+    res.status(500).json({ error: "Failed to generate response" });
+  }
+});
 
-// endpoimt for command controller (music, weather, etc)
-app.post('/command', async (req, res) => {
-  const { command, userInput, destination, sessionId = 'default' } = req.body;
-  city = null;
+// Command controller endpoint
+app.post("/command", async (req, res) => {
+  const { command, userInput, destination, sessionId = "default" } = req.body;
+  let city = null;
   // Handle both command and userInput
   const inputText = command || userInput;
 
   if (!inputText) {
-    return res.status(400).json({ error: 'Command or userInput is required' });
+    return res.status(400).json({ error: "Command or userInput is required" });
   }
 
-  if(destination) {
+  if (destination) {
     const cityRegex = /,\s*([^,]+),\s*\w{2}\s*\d{5}/;
     const match = destination.match(cityRegex);
     city = match ? match[1].trim() : null;
@@ -83,44 +104,44 @@ app.post('/command', async (req, res) => {
     const response = await commandController.processCommand(inputText, sessionId, city);
     res.json(response);
   } catch (error) {
-    console.error('Error processing command/conversation:', error);
-    res.status(500).json({ error: 'Failed to process request' });
+    console.error("Error processing command/conversation:", error);
+    res.status(500).json({ error: "Failed to process request" });
   }
-  
 });
 
-// music control routes
-app.post('/api/music/play', async (req, res) => {
+// Music control routes
+app.post("/api/music/play", async (req, res) => {
   const result = await musicController.play();
   res.json(result);
 });
 
-app.post('/api/music/pause', async (req, res) => {
+app.post("/api/music/pause", async (req, res) => {
   const result = await musicController.pause();
   res.json(result);
 });
 
-app.post('/api/music/next', async (req, res) => {
+app.post("/api/music/next", async (req, res) => {
   const result = await musicController.skipToNext();
   res.json(result);
 });
 
-app.post('/api/music/previous', async (req, res) => {
+app.post("/api/music/previous", async (req, res) => {
   const result = await musicController.skipToPrevious();
   res.json(result);
 });
 
-// Authentication routes
-app.get('/api/music/login', async (req, res) => {
+// Authentication routes for music
+app.get("/api/music/login", async (req, res) => {
   const result = await musicController.login();
   res.json(result);
 });
 
-app.get('/api/music/callback', async (req, res) => {
+app.get("/api/music/callback", async (req, res) => {
   const result = await musicController.callback(req.query.code);
   res.json(result);
 });
-// create a route that gets the current song playlist cover
+
+// Current song and album cover
 app.get("/api/music/currentSongCover", async (req, res) => {
   const result = await musicController.getAlbumCover();
   res.json(result);
@@ -132,11 +153,12 @@ app.get("/api/music/currentSong", async (req, res) => {
   res.json(result);
 });
 
-app.get('/api/directions', async (req, res) => {
+// Directions route
+app.get("/api/directions", async (req, res) => {
   const { origin, destination } = req.query;
-  
+
   if (!origin || !destination) {
-    return res.status(400).json({ error: 'Origin and destination are required' });
+    return res.status(400).json({ error: "Origin and destination are required" });
   }
 
   try {
@@ -148,12 +170,17 @@ app.get('/api/directions', async (req, res) => {
   }
 });
 
+
+
+
+
+// Simulation routes
 // new endpoint to handle location simulation
-app.post('/api/simulation/location', (req, res) => {
+app.post("/api/simulation/location", (req, res) => {
   const { lat, lng, accuracy } = req.body;
-  
-  if (typeof lat !== 'number' || typeof lng !== 'number') {
-    return res.status(400).json({ error: 'Latitude and longitude are required numbers' });
+
+  if (typeof lat !== "number" || typeof lng !== "number") {
+    return res.status(400).json({ error: "Latitude and longitude are required numbers" });
   }
 
   try {
@@ -452,7 +479,8 @@ app.post("/startSimulationDirections", async (req, res) => {
 
       // Start navigation
       const response = await axios.post('http://localhost:8000/api/navigation/start', {
-        origin: "16080 Lyndon B Johnson Fwy, Mesquite, TX 75150",
+        //origin: "16080 Lyndon B Johnson Fwy, Mesquite, TX 75150",
+        origin: "2800 Waterview Pkwy, Richardson, Tx 75080",
         destination
       });
 

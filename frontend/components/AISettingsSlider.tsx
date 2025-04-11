@@ -133,29 +133,27 @@ const AISettingsSlider: React.FC<AISettingsSliderProps> = ({
 
   const getHumorStyleText = (level: number) => {
     if (level < 0.25) return 'Serious';
-    if (level < 0.5) return 'Slightly friendly';
-    if (level < 0.75) return 'Friendly';
-    return 'Very funny';
+    if (level < 0.5) return 'Casual';
+    if (level < 0.75) return 'Fun';
+    return 'Very Fun';
   };
 
   const getFrequencyText = (level: number) => {
-    if (level < 0.25) return 'Rarely';
-    if (level < 0.5) return 'Sometimes';
+    if (level < 0.25) return 'Rare';
+    if (level < 0.5) return 'Some';
     if (level < 0.75) return 'Often';
-    return 'Very often';
+    return 'Very Often';
   };
 
   const getTemperatureText = (level: number) => {
-    if (level < 0.3) return 'Very focused';
+    if (level < 0.3) return 'Focused';
     if (level < 0.6) return 'Balanced';
     if (level < 0.8) return 'Creative';
-    return 'Very creative';
+    return 'Very Creative';
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Companion Settings</Text>
-      
       {/* Temperature Slider */}
       <View style={styles.sliderContainer}>
         <View style={styles.sliderHeader}>
@@ -175,15 +173,15 @@ const AISettingsSlider: React.FC<AISettingsSliderProps> = ({
           disabled={isLoading}
         />
         <View style={styles.sliderLabels}>
-          <Text style={styles.sliderMinLabel}>Focused (0.0)</Text>
-          <Text style={styles.sliderMaxLabel}>Creative (1.0)</Text>
+          <Text style={styles.sliderMinLabel}>Focused</Text>
+          <Text style={styles.sliderMaxLabel}>Creative</Text>
         </View>
       </View>
       
       {/* Humor Level Slider */}
       <View style={styles.sliderContainer}>
         <View style={styles.sliderHeader}>
-          <Text style={styles.sliderLabel}>Humor Level</Text>
+          <Text style={styles.sliderLabel}>Humor</Text>
           <Text style={styles.sliderValue}>{humorLevel.toFixed(1)} - {humorStyle || getHumorStyleText(humorLevel)}</Text>
         </View>
         <Slider
@@ -199,15 +197,15 @@ const AISettingsSlider: React.FC<AISettingsSliderProps> = ({
           disabled={isLoading}
         />
         <View style={styles.sliderLabels}>
-          <Text style={styles.sliderMinLabel}>Serious (0.0)</Text>
-          <Text style={styles.sliderMaxLabel}>Funny (1.0)</Text>
+          <Text style={styles.sliderMinLabel}>Serious</Text>
+          <Text style={styles.sliderMaxLabel}>Funny</Text>
         </View>
       </View>
       
       {/* Frequency Slider */}
       <View style={styles.sliderContainer}>
         <View style={styles.sliderHeader}>
-          <Text style={styles.sliderLabel}>Conversation Frequency</Text>
+          <Text style={styles.sliderLabel}>Frequency</Text>
           <Text style={styles.sliderValue}>{frequency.toFixed(1)} - {getFrequencyText(frequency)}</Text>
         </View>
         <Slider
@@ -223,8 +221,8 @@ const AISettingsSlider: React.FC<AISettingsSliderProps> = ({
           disabled={isLoading}
         />
         <View style={styles.sliderLabels}>
-          <Text style={styles.sliderMinLabel}>Rarely (0.0)</Text>
-          <Text style={styles.sliderMaxLabel}>Often (1.0)</Text>
+          <Text style={styles.sliderMinLabel}>Rare</Text>
+          <Text style={styles.sliderMaxLabel}>Often</Text>
         </View>
       </View>
       

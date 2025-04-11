@@ -3,6 +3,8 @@ const historyCtrl = require("../controller/historyCtrl");
 const isAuthenticated = require("../middlewares/isAuth");
 const router = express.Router();
 
+router.use(isAuthenticated);
+
 // Add trip route
 router.post('/trip', isAuthenticated, historyCtrl.addTrip);
 
@@ -10,7 +12,7 @@ router.post('/trip', isAuthenticated, historyCtrl.addTrip);
 router.get('/trips', isAuthenticated, historyCtrl.getTrips);
 
 // Add conversation to a trip
-router.post('/trip/:tripId/conversation', isAuthenticated, historyCtrl.addConversation);
+router.post('/trip/:tripId/conversations', isAuthenticated, historyCtrl.addConversation);
 
 // Add only AI response to a trip's conversation
 router.post('/trip/:tripId/ai-response', isAuthenticated, historyCtrl.addAIResponse);
@@ -20,6 +22,11 @@ router.get('/trip/:tripId', isAuthenticated, historyCtrl.getTrip);
 
 //Start a new trip
 router.post('/start-trip', isAuthenticated, historyCtrl.startTrip);
+
+//End a trip
+router.post('/trip/:tripId/end', isAuthenticated, historyCtrl.endTrip);
+
+
 
 
 module.exports = router;

@@ -253,11 +253,11 @@ class AIController {
             
             // log the current humor prompt for debugging
             const humorPrompts = {
-                0: "Serious driving companion (no jokes)",
-                0.25: "Slightly friendly (occasionally light-hearted, no jokes)",
-                0.5: "Friendly with occasional jokes",
-                0.75: "Very friendly with frequent jokes",
-                1: "Extremely funny with lots of jokes"
+                0: "Serious",
+                0.25: "Slightly friendly",
+                0.5: "Friendly",
+                0.75: "Very friendly",
+                1: "Extremely funny"
             };
             
             // find the closest defined level
