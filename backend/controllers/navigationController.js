@@ -252,7 +252,7 @@ class NavigationController extends EventEmitter {
             totalSteps: this.currentRoute ? this.currentRoute.length : 0,
             completedSteps: this.currentStepIndex
         };
-        this.emit('navigationComplete', finalStats);
+        //this.emit('navigationComplete', finalStats);
 
         // only clear route data after emitting final events
         this.currentRoute = null;
