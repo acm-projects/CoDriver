@@ -382,7 +382,7 @@ wss.on('connection', (ws) => {
             ws.send(JSON.stringify({
                 type: 'complete',
                 data: {
-                    message: "Great job! You've reached your destination.",
+                    message: "Great job! You've reached your destination. 1",
                     timestamp: new Date().toISOString()
                 }
             }));

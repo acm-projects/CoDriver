@@ -60,46 +60,68 @@ export default function HomeScreen() {
 
   // WebSocket setup
   useEffect(() => {
-    ws.current = new WebSocket(`ws://${ipAddress}:8000/`);
+    if (!ipAddress) return; // Don't connect if IP address is not available
 
-    ws.current.onopen = () => {
-      console.log("WebSocket connected");
-    };
+    const connectWebSocket = () => {
+      console.log("Attempting to connect to WebSocket at:", `ws://${ipAddress}:8000/`);
+      ws.current = new WebSocket(`ws://${ipAddress}:8000/`);
 
-    ws.current.onmessage = (event: WebSocketMessageEvent) => {
-      try {
-        const parsedData = JSON.parse(event.data as string) as InstructionMessage;
-        let textToSpeak = "";
+      ws.current.onopen = () => {
+        console.log("WebSocket connected");
+      };
 
-        if (parsedData.type === "approachingTurn") {
-          textToSpeak = parsedData.data.instruction || "";
-        } else if (parsedData.type === "complete") {
-          textToSpeak = parsedData.data.message || "You have reached your destination";
+      ws.current.onmessage = (event: WebSocketMessageEvent) => {
+        try {
+          console.log("Received WebSocket message:", event.data);
+          const parsedData = JSON.parse(event.data as string) as InstructionMessage;
+          let textToSpeak = "";
+
+          if (parsedData.type === "approachingTurn") {
+            textToSpeak = parsedData.data.instruction || "";
+          } else if (parsedData.type === "complete") {
+            textToSpeak = parsedData.data.message || "You have reached your destination";
+          } else if(parsedData.type === "newHazard") {
+            textToSpeak = parsedData.data.instruction || "There's a hazard detected in your area, please be cautious";
+          } else if(parsedData.type === "noHazard") {
+            console.log("there is no hazard in the area");
+          } else {
+            console.log("Received message type:", parsedData.type);
+          }
+
+          if (textToSpeak) {
+            console.log("Speaking message:", textToSpeak);
+            stopListening(); // Stop STT before speaking
+            setBackendResponse(textToSpeak);
+            speakResponse(textToSpeak);
+          }
+        } catch (error) {
+          console.error("Error processing WebSocket message:", error);
+          console.error("Raw message data:", event.data);
+          setBackendResponse(String(event.data));
         }
+      };
 
-        if (textToSpeak) {
-          stopListening(); // Stop STT before speaking
-          setBackendResponse(textToSpeak);
-          speakResponse(textToSpeak); // Centralized speaking function
-        }
-      } catch (error) {
-        console.error("Error processing WebSocket message:", error);
-        setBackendResponse(String(event.data));
-      }
+      ws.current.onerror = (ev: Event) => {
+        console.error("WebSocket Error:", ev);
+        // Attempt to reconnect after a delay
+        setTimeout(connectWebSocket, 5000);
+      };
+
+      ws.current.onclose = () => {
+        console.log("WebSocket disconnected");
+        // Attempt to reconnect after a delay
+        setTimeout(connectWebSocket, 5000);
+      };
     };
 
-    ws.current.onerror = (ev: Event) => {
-      console.error("WebSocket Error:", ev);
-    };
-
-    ws.current.onclose = () => {
-      console.log("WebSocket disconnected");
-    };
+    connectWebSocket();
 
     return () => {
-      if (ws.current) ws.current.close();
+      if (ws.current) {
+        ws.current.close();
+      }
     };
-  }, []);
+  }, [ipAddress]); // Re-run effect when IP address changes
 
   // Centralized function to handle speaking
   const speakResponse = (text: string) => {
@@ -228,6 +250,8 @@ export default function HomeScreen() {
   const startNavigation = async (dest: string) => {
     try {
       setLoading(true);
+
+      console.log("the dest string read as ", dest);
       const destination = dest || "2831 W 15th St Ste 200, Plano, Tx 75075";
       console.log(`Starting navigation to: ${destination}`);
 
@@ -387,7 +411,8 @@ export default function HomeScreen() {
           const tripData = await startTrip(extractedDestination);
           console.log('Trip started successfully:', tripData);
           // Call startNavigation after successfully starting the trip
-          await startNavigation("2831 W 15th St Ste 200, Plano, Tx 75075");
+          //await startNavigation("2831 W 15th St Ste 200, Plano, Tx 75075");
+          await startNavigation(extractedDestination);
         } catch (tripError) {
           console.error('Failed to start trip:', tripError);
           setBackendResponse("Sorry, I couldn't start the trip. Please try again.");
@@ -404,6 +429,7 @@ export default function HomeScreen() {
         speakResponse("Trip ended successfully");
       } else {
         // Regular conversation
+        console.log("the transcript read as from the /command endpoint");
         const response = await axios.post("http://localhost:8000/command", {
           userInput: transcript,
           sessionId: "unique-session-id",
