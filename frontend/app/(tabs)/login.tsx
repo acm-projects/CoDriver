@@ -16,7 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function Example() {
   const router = useRouter(); // Hook for navigation
-  const { setToken } = useAuth();
+  const { setToken, setEmail } = useAuth();
 
   // State for handling form inputs (email & password)
   const [form, setForm] = useState({
@@ -71,6 +71,7 @@ export default function Example() {
       if (response.ok) {
         const data = JSON.parse(textResponse);  // Manually parse if it's JSON
         setToken(data.token); // Store the token in context
+        setEmail(form.email); //Store the email
         setAlertMessage(data.message);
         setAlertVisible(true); // Show success message
         setTimeout(() => {

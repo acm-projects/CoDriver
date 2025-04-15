@@ -12,10 +12,12 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Example() {
   const [drivingSuggestions, setDrivingSuggestions] = useState(false);
   const router = useRouter();
+  const { email } = useAuth();
 
   const toggleDrivingSuggestions = (value: boolean) => {
     setDrivingSuggestions(value);
@@ -25,6 +27,12 @@ export default function Example() {
   const navigateToLogin = () => {
     router.push('/login');
   };
+
+  // Function to get display name from email
+  const displayName = (email: string | null) => {
+    if (!email) return '';
+    return email.split('@')[0];
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#1E1E1E' }}>
@@ -55,7 +63,7 @@ export default function Example() {
             }}
             style={styles.profileImage}
           />
-          <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>Sourish Reddy</Text>
+          <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>{displayName(email)}</Text>
         </View>
         <View style={styles.toggleContainer}>
           <Text style={styles.toggleText}>Driving Suggestions</Text>
