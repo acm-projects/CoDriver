@@ -96,7 +96,7 @@ export default function HomeScreen() {
         const filtered = addressData.filter((address: string) =>
           address.toLowerCase().includes(text.toLowerCase())
         );
-        setSuggestions(filtered.slice(0, 5)); // Limit to 5 suggestions
+        setSuggestions(filtered.slice(0, 3)); // Limit to number of suggestions
       } else {
         setSuggestions([]);
       }
