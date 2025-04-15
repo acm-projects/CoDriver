@@ -10,6 +10,10 @@ import { Animated, Easing } from "react-native";
 import * as Speech from "expo-speech";
 import { useAuth } from '../../context/AuthContext';
 import * as Network from 'expo-network';
+import { ElevenLabsClient, play } from "elevenlabs";
+ import { Audio } from "expo-av";
+ import * as FileSystem from "expo-file-system";
+ import { Buffer } from 'buffer';
 
 // Define interfaces for WebSocket messages
 interface InstructionMessage {
@@ -24,6 +28,71 @@ interface InstructionMessage {
 type WebSocketType = WebSocket | null;
 
 export default function HomeScreen() {
+  // Lock to prevent concurrent playback
+  const audioLock = useRef(false);
+ 
+  // Enqueue initial navigation message with delay
+  const enqueueInitialNavigation = async (destination: string) => {
+    const initialMessage = `Starting navigation to ${destination}`;
+    await speakResponse(initialMessage);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  };
+  const audioQueue = useRef<string[]>([]); // Queue for audio requests
+  const isPlayingRef = useRef(false); // Track if audio is playing
+  // Update the speakWithElevenLabs function to return a Promise
+  // ElevenLabs TTS function with queue support
+  const speakWithElevenLabs = async (text: string): Promise<void> => {
+    if (!text) return;
+    let path = "";
+    try {
+      const voiceId = "21m00Tcm4TlvDq8ikWAM";
+      const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "xi-api-key": "sk_550053542174a9cb083e460d2d6683efec0b83e2554edec2", // Replace with secure storage
+          "Content-Type": "application/json",
+          "Accept": "audio/mpeg",
+        },
+        body: JSON.stringify({
+          text,
+          model_id: "eleven_multilingual_v2",
+          output_format: "mp3_44100_128",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`ElevenLabs API error: ${await response.text()}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      path = `${FileSystem.documentDirectory}speech-${Date.now()}.mp3`;
+      await FileSystem.writeAsStringAsync(path, Buffer.from(arrayBuffer).toString("base64"), {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      const { sound } = await Audio.Sound.createAsync({ uri: path }, { shouldPlay: true });
+      isPlayingRef.current = true;
+
+      await new Promise<void>((resolve) => {
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            sound.unloadAsync();
+            isPlayingRef.current = false;
+            resolve();
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Error in speakWithElevenLabs:", error);
+      isPlayingRef.current = false;
+      throw error;
+    } finally {
+      if (path) {
+        FileSystem.deleteAsync(path).catch((err) => console.warn("File cleanup failed:", err));
+      }
+    }
+  };
   const { token } = useAuth();
   const ws = useRef<WebSocketType>(null);
   const [recognizing, setRecognizing] = useState(true); // Start with true to unmute
@@ -70,7 +139,7 @@ export default function HomeScreen() {
         console.log("WebSocket connected");
       };
 
-      ws.current.onmessage = (event: WebSocketMessageEvent) => {
+      ws.current.onmessage = async (event: WebSocketMessageEvent) => {
         try {
           console.log("Received WebSocket message:", event.data);
           const parsedData = JSON.parse(event.data as string) as InstructionMessage;
@@ -89,14 +158,17 @@ export default function HomeScreen() {
           }
 
           if (textToSpeak) {
-            console.log("Speaking message:", textToSpeak);
-            stopListening(); // Stop STT before speaking
+            // Wait for initial message to finish
+            while (audioQueue.current.length > 0 || isPlayingRef.current) {
+              await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+  
+            stopListening();
             setBackendResponse(textToSpeak);
-            speakResponse(textToSpeak);
+            await speakResponse(textToSpeak);
           }
         } catch (error) {
           console.error("Error processing WebSocket message:", error);
-          console.error("Raw message data:", event.data);
           setBackendResponse(String(event.data));
         }
       };
@@ -114,39 +186,53 @@ export default function HomeScreen() {
       };
     };
 
-    connectWebSocket();
-
     return () => {
-      if (ws.current) {
-        ws.current.close();
-      }
+      if (ws.current) ws.current.close();
     };
-  }, [ipAddress]); // Re-run effect when IP address changes
+  }, []);
 
   // Centralized function to handle speaking
-  const speakResponse = (text: string) => {
-    if (recognizing) stopListening(); // Ensure STT is off
-    setIsSpeaking(true);
+  // Modified speakResponse function to use ElevenLabs
+  // Modified speakResponse with lock and sequential queue processing
 
-    Speech.speak(text, {
-      rate: 0.8,
-      pitch: 1.0,
-      language: "en-US",
-      onStart: () => setIsSpeaking(true),
-      onDone: () => {
+  // Centralized function to handle speaking
+    // Centralized function to handle speaking
+  // Modified speakResponse function to use ElevenLabs
+  // Modified speakResponse with lock and sequential queue processing
+  const speakResponse = async (text: string) => {
+    if (!text) return;
+
+    audioQueue.current.push(text);
+    if (audioLock.current) return;
+
+    audioLock.current = true;
+
+    while (audioQueue.current.length > 0) {
+      const nextText = audioQueue.current[0];
+      if (recognizing) stopListening();
+      setIsSpeaking(true);
+
+      try {
+        await speakWithElevenLabs(nextText);
+        audioQueue.current.shift();
+      } catch (error) {
+        console.error("TTS error:", error);
+        audioQueue.current.shift();
+      } finally {
         setIsSpeaking(false);
-        setTimeout(startListening, 1500); // Delay restart of STT
-      },
-      onStopped: () => {
-        setIsSpeaking(false);
-        setTimeout(startListening, 1500);
-      },
-      onError: () => {
-        setIsSpeaking(false);
-        setTimeout(startListening, 1500);
-      },
-    });
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    audioLock.current = false;
+
+    if (audioQueue.current.length === 0) {
+      setTimeout(startListening, 500);
+    }
   };
+
+    
 
   // Check permissions and initialize listening
   useEffect(() => {
@@ -262,11 +348,11 @@ export default function HomeScreen() {
 
       console.log("Navigation started:", response.data);
       setBackendResponse(`Starting navigation to ${destination}`);
-      speakResponse(`Starting navigation to ${destination}`);
+      await enqueueInitialNavigation(destination);
     } catch (error) {
       console.error("Error starting navigation:", error);
       setBackendResponse("Sorry, there was an error starting navigation.");
-      speakResponse("Sorry, there was an error starting navigation.");
+      await speakResponse("Sorry, there was an error starting navigation.");
     } finally {
       setLoading(false);
     }
