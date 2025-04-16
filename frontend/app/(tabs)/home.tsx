@@ -10,6 +10,7 @@ import { Animated, Easing } from "react-native";
 import * as Speech from "expo-speech";
 import { useAuth } from '../../context/AuthContext';
 import * as Network from 'expo-network';
+import SpotifyBar from '../../components/spotifyBar';
 
 // Define interfaces for WebSocket messages
 interface InstructionMessage {
@@ -603,26 +604,21 @@ export default function HomeScreen() {
        <Text style={styles.topLeftText}>CoDriver</Text>
      </View>
 
-
-     <TouchableOpacity style={styles.spotifyTab}>
-       {/* Main container to align the content */}
+     {/* Spotify Tab - Commented Out */}
+     {/* <TouchableOpacity style={styles.spotifyTab}>
        <View style={styles.leftSection}>
          <Image
-           source={require('../../assets/images/album cover.png')}
+           source={require('../../assets/images/album_cover.png')}
            style={styles.albumCover}
          />
        </View>
 
-
        <View style={styles.rightSection}>
-         {/* Text container for song title */}
          <View>
            <Text style={styles.spotifyTabText} numberOfLines={2}>
              The Color Violet · Tory Lanez
            </Text>
 
-
-           {/* Bluetooth icon + BeatSpill+ in a row */}
            <View style={styles.beatspillContainer}>
              <Image
                source={require('../../assets/images/bluetooth.png')}
@@ -632,14 +628,11 @@ export default function HomeScreen() {
            </View>
          </View>
 
-
-         {/* Second Bluetooth icon */}
          <Image
            source={require('../../assets/images/bluetooth.png')}
            style={styles.bluetooth2}
          />
        </View>
-
 
        <View style={styles.bottomSection}>
          <Image
@@ -655,8 +648,9 @@ export default function HomeScreen() {
            resizeMode="contain"
          />
        </View>
-     </TouchableOpacity>
+     </TouchableOpacity> */}
 
+    <SpotifyBar ipAddress={ipAddress} />
 
      <View style={styles.container}>
        {/* Background AI-themed blob image */}
@@ -667,7 +661,6 @@ export default function HomeScreen() {
        />
      </View>
 
-
      {/* Destination Button at the bottom */}
      <TouchableOpacity style={styles.destinationButton} onPress={handleSubmitDestination}>
        {/* Left Section: Icon */}
@@ -677,7 +670,6 @@ export default function HomeScreen() {
            style={styles.SearchIcon}
          />
        </View>
-
 
        {/* Right Section: Text Input */}
        <View style={styles.rightSection2}>
@@ -695,7 +687,6 @@ export default function HomeScreen() {
        </View>
      </TouchableOpacity>
 
-
      <TouchableOpacity
        style={styles.muteButton} // Style for the mute button
        onPress={toggleMute}
@@ -711,7 +702,6 @@ export default function HomeScreen() {
    </View>
  );
 }
-
 
 const styles = StyleSheet.create({
  destinationInput: {
@@ -739,7 +729,6 @@ const styles = StyleSheet.create({
    marginLeft: 120,
  },
 
-
  destinationTabText2: {
    fontSize: 18,
    fontWeight: '600',
@@ -747,9 +736,6 @@ const styles = StyleSheet.create({
    textAlign: 'center', // Center text inside the button
    width: '110%', // Ensure text takes full width to remain centered
  },
-
-
-
 
  leftSection3: {
    flexDirection: 'row',  // Align icon horizontally in the left section
@@ -766,7 +752,6 @@ const styles = StyleSheet.create({
    flex: 1,
    backgroundColor: 'black',
  },
-
 
  topLeftContainer: {
    position: 'absolute',
@@ -912,7 +897,6 @@ const styles = StyleSheet.create({
    alignItems: 'center', // Center the icon vertically
  },
 
-
  rightSection2: {
    flexDirection: 'row',  // Align text and icon horizontally in the right section
    justifyContent: 'center',
@@ -967,7 +951,6 @@ const styles = StyleSheet.create({
    tintColor: 'lightgray', // Lighter color shade
  },
 
-
  googleBtn: {
    flexDirection: 'row',
    alignItems: 'center',
@@ -982,7 +965,6 @@ const styles = StyleSheet.create({
    fontWeight: '600',
    color: '#000',
  },
-
 
  // New Destination Button Styles
  destinationButton: {

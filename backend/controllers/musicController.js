@@ -61,12 +61,39 @@ class MusicController {
 
   async callback(code) {
     try {
+      if (!code) {
+        console.error('No authorization code provided');
+        return { success: false, error: 'Authorization code is required' };
+      }
+
+      console.log('Received authorization code, exchanging for tokens...');
       const data = await spotifyApi.authorizationCodeGrant(code);
+      
+      if (!data.body || !data.body.access_token) {
+        console.error('Invalid response from Spotify:', data);
+        return { success: false, error: 'Invalid response from Spotify' };
+      }
+
+      console.log('Successfully obtained tokens from Spotify');
       spotifyApi.setAccessToken(data.body['access_token']);
       spotifyApi.setRefreshToken(data.body['refresh_token']);
-      return { success: true, message: 'Authentication successful' };
+      
+      // Verify the tokens work by making a test API call
+      try {
+        await spotifyApi.getMe();
+        console.log('Successfully verified Spotify access');
+        return { success: true, message: 'Authentication successful' };
+      } catch (verifyError) {
+        console.error('Failed to verify Spotify access:', verifyError);
+        return { success: false, error: 'Failed to verify Spotify access' };
+      }
     } catch (error) {
-      return { success: false, error: error.message };
+      console.error('Error in Spotify callback:', error);
+      return { 
+        success: false, 
+        error: error.message,
+        details: error.response?.data || 'No additional details available'
+      };
     }
   }
 

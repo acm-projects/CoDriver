@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   SafeAreaView,
@@ -15,11 +15,28 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import { Ionicons } from '@expo/vector-icons';
 import AISettingsSlider from '../../components/AISettingsSlider';
 import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
+import * as WebBrowser from 'expo-web-browser';
+import * as Network from 'expo-network';
 
 export default function Example() {
   const [drivingSuggestions, setDrivingSuggestions] = useState(false);
   const router = useRouter();
   const { token } = useAuth();
+  const [ipAddress, setIpAddress] = useState('');
+
+  // Get IP Address for API calls
+  useEffect(() => {
+    const getIpAddress = async () => {
+      try {
+        const ip = await Network.getIpAddressAsync();
+        setIpAddress(ip);
+      } catch (error) {
+        console.error('Failed to get IP address:', error);
+      }
+    };
+    getIpAddress();
+  }, []);
 
   // Extract user ID from the JWT token
   const getUserIdFromToken = () => {
@@ -45,6 +62,47 @@ export default function Example() {
 
   const handleAISettingsChange = (settings: any) => {
     console.log('AI settings updated:', settings);
+  };
+
+  const handleSpotifyLogin = async () => {
+    try {
+      // Use localhost for development
+      const backendUrl = 'http://localhost:8000';
+
+      // Get the login URL from the backend
+      const response = await axios.get(`${backendUrl}/api/music/login`);
+      const { url } = response.data;
+
+      console.log("Login URL:", url);
+
+      // Use localhost as the redirect URL
+      const redirectUrl = `${backendUrl}/api/music/callback`;
+      console.log("Redirect URL:", redirectUrl);
+      
+      // Open the Spotify login URL in the browser
+      const result = await WebBrowser.openAuthSessionAsync(
+        url,
+        redirectUrl
+      );
+
+      console.log("Auth result:", result);
+
+      if (result.type === 'success') {
+        // The backend will handle the callback directly
+        console.log('Spotify login successful');
+      } else {
+        console.log('Spotify login cancelled or failed:', result.type);
+      }
+    } catch (error) {
+      console.error('Error during Spotify login:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Full error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
+      }
+    }
   };
 
   return (
@@ -118,9 +176,7 @@ export default function Example() {
           {/* Spotify Connect Button */}
           <View style={styles.formAction}>
             <TouchableOpacity
-              onPress={() => {
-                // handle Google sign-in
-              }}>
+              onPress={handleSpotifyLogin}>
               <View style={styles.btn}>
                 <Image
                   source={{

@@ -27,7 +27,8 @@ export default function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
-    console.log('Fonts are still loading...');
+    console.log('Fonts are still loading  ...');
+    console.log(loaded);
     //return null;
   }
 

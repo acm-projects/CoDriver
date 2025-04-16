@@ -132,13 +132,48 @@ app.post("/api/music/previous", async (req, res) => {
 
 // Authentication routes for music
 app.get("/api/music/login", async (req, res) => {
-  const result = await musicController.login();
-  res.json(result);
+  try {
+    const result = await musicController.login();
+    if (!result.success) {
+      console.error('Login URL generation failed:', result.error);
+      return res.status(500).json(result);
+    }
+    res.json(result);
+  } catch (error) {
+    console.error('Error in login route:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 app.get("/api/music/callback", async (req, res) => {
-  const result = await musicController.callback(req.query.code);
-  res.json(result);
+  try {
+    const { code } = req.query;
+    if (!code) {
+      console.error('No code provided in callback');
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Authorization code is required' 
+      });
+    }
+
+    console.log('Processing Spotify callback with code:', code);
+    const result = await musicController.callback(code);
+    
+    if (!result.success) {
+      console.error('Callback processing failed:', result.error);
+      return res.status(500).json(result);
+    }
+
+    console.log('Spotify callback processed successfully');
+    res.json(result);
+  } catch (error) {
+    console.error('Error in callback route:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      details: error.response?.data || 'No additional details available'
+    });
+  }
 });
 
 // Current song and album cover
