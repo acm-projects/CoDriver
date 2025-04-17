@@ -40,7 +40,7 @@ const SpotifyBar: React.FC<SpotifyBarProps> = ({ ipAddress }) => {
         title: songData?.title || 'No song playing',
         artist: songData?.artist || '',
         album: songData?.album || '',
-        albumCover: coverData || require('../assets/images/album_cover.png')
+        albumCover: coverData || require('../assets/images/album_default.png')
       });
 
       setIsPlaying(songData?.isPlaying || false);
@@ -81,7 +81,8 @@ const SpotifyBar: React.FC<SpotifyBarProps> = ({ ipAddress }) => {
       {/* Left Section: Album Cover */}
       <View style={styles.leftSection}>
         <Image
-          source={typeof songInfo.albumCover === 'string' ? { uri: songInfo.albumCover } : songInfo.albumCover}
+          source={typeof songInfo.albumCover === 'string' ? { uri: songInfo.albumCover } : songInfo.albumCover || require('../assets/images/album_default.png')}
+          //source={songInfo.albumCover ? { uri: songInfo.albumCover } : require('../assets/images/album_default.png')}
           style={styles.albumCover}
           onError={(e) => console.error('Error loading album cover:', e.nativeEvent.error)}
           onLoad={() => console.log('Album cover loaded successfully', songInfo.albumCover)}

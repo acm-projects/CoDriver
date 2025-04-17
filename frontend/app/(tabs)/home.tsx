@@ -215,7 +215,7 @@ export default function HomeScreen() {
       contextualStrings: [
         "weather", "temperature", "city", "weather in", "ai", "chat", "conversation",
         "start navigation", "navigate to", "take me to", "directions to",
-        "how do I get to", "route to"
+        "how do I get to", "route to", "Start navigation"
       ],
     });
     setRecognizing(true);
@@ -431,7 +431,7 @@ export default function HomeScreen() {
       } else {
         // Regular conversation
         console.log("the transcript read as from the /command endpoint");
-        const response = await axios.post("http://localhost:8000/command", {
+        const response = await axios.post(`http://${ipAddress}:8000/command`, {
           userInput: transcript,
           sessionId: "unique-session-id",
         });
@@ -533,9 +533,12 @@ export default function HomeScreen() {
       // Convert frequency (0-1) to silence duration in milliseconds
       // Lower frequency = longer silence duration
       const minDuration = 30000; // 30 seconds minimum
-      const maxDuration = 180000; // 3 minutes maximum
+      const maxDuration = 600000; // 10 minutes maximum
+
       // Invert the frequency (1 - frequency) to make lower values result in longer durations
+      
       return minDuration + ((1 - aiSettings.frequency) * (maxDuration - minDuration));
+      
     };
 
     const duration = getSilenceDuration();

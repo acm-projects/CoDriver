@@ -66,8 +66,12 @@ export default function Example() {
 
   const handleSpotifyLogin = async () => {
     try {
-      // Use localhost for development
-      const backendUrl = 'http://localhost:8000';
+      // Use localhost for development- might need to change to ip address 
+      //const backendUrl = 'http://localhost:8000';
+
+      // get ip address for production
+      const ipAddress = await Network.getIpAddressAsync();
+      const backendUrl = `http://${ipAddress}:8000`;
 
       // Get the login URL from the backend
       const response = await axios.get(`${backendUrl}/api/music/login`);
@@ -75,7 +79,7 @@ export default function Example() {
 
       console.log("Login URL:", url);
 
-      // Use localhost as the redirect URL
+      // Use backend url as the redirect URL
       const redirectUrl = `${backendUrl}/api/music/callback`;
       console.log("Redirect URL:", redirectUrl);
       
