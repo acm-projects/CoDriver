@@ -47,10 +47,12 @@
     <key>NSAppTransportSecurity</key>
     <dict>
       <key>NSAllowsArbitraryLoads</key>
-      <false/>
+      <true/>
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>This app needs access to save audio files.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to use the microphone.</string>
     <key>NSPhotoLibraryAddUsageDescription</key>

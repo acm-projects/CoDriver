@@ -51,7 +51,7 @@ export default function HomeScreen() {
       const response = await fetch(url, {
         method: "POST",
         headers: {
-          "xi-api-key": "sk_550053542174a9cb083e460d2d6683efec0b83e2554edec2", // Replace with secure storage
+          "xi-api-key": "sk_098d2ff86b3eced1d6ee5990c8644756779e6e64854928ae", // Replace with secure storage
           "Content-Type": "application/json",
           "Accept": "audio/mpeg",
         },
@@ -65,6 +65,7 @@ export default function HomeScreen() {
       if (!response.ok) {
         throw new Error(`ElevenLabs API error: ${await response.text()}`);
       }
+      console.log("AHSHAHJSBHABHS ", FileSystem.documentDirectory); 
 
       const arrayBuffer = await response.arrayBuffer();
       path = `${FileSystem.documentDirectory}speech-${Date.now()}.mp3`;
