@@ -82,7 +82,7 @@ export default function Example() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#1E1E1E' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }}>
       <View style={styles.container}>
         {/* Header Section */}
         <View style={styles.header}>

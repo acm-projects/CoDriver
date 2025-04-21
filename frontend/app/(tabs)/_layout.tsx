@@ -1,20 +1,26 @@
-import { Tabs, useSegments, useRootNavigationState } from 'expo-router';
+import { Tabs, useSegments, useRouter, useRootNavigationState } from 'expo-router';
 import React from 'react';
 import { View, Dimensions } from 'react-native';
+import { Pressable } from 'react-native';
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Ionicons } from '@expo/vector-icons';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import CustomHomeTab from '../CustomHomeTab';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const segments = useSegments();
+  const router = useRouter();
   const navigationState = useRootNavigationState();
+
+  const isHomeFocused = segments.length === 1 && segments[0] === 'home';
 
   // Hide tab bar on login, signup, and index pages
   const isHiddenScreen =
-    !segments[1] || // Handle index ("/") if second segment is missing
+    !segments[1] ||
     segments[1] === 'login' ||
     segments[1] === 'signup';
 
@@ -26,22 +32,28 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: '#CC5500',
+        //tabBarInactiveBackgroundColor: 'gray',
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: isHiddenScreen
-          ? { display: 'none' } // Hide tab bar for login/signup/index
-          : {
-            flexDirection: 'row', // Ensure icons are laid out in a row (horizontally)
-            justifyContent: 'space-evenly', // This will add space between the icons evenly
+          ? {display: 'none',
             backgroundColor: 'black',
+          }
+          : {
+            flexDirection: 'row',
+            justifyContent: 'space-evenly',
+            backgroundColor: 'black',
+            //position: 'absolute',
             bottom: 0,
-            height: 100, // Specify the height to match your original design
+            height: 100,
             width: '100%',
             paddingHorizontal: 0,
-            paddingBottom: 20, // Keep some padding for safe area
+            paddingBottom: 20,
+            borderTopWidth: 0, // Optional: removes default border
           },
+        
         tabBarIconStyle: {
           width: 30,
           height: 30,
@@ -50,6 +62,12 @@ export default function TabLayout() {
           fontSize: 12,
           marginBottom: 5,
         },
+        tabBarItemStyle: {
+          backgroundColor: 'transparent', // Add this
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
       }}
     >
       {/* History tab */}
@@ -57,7 +75,7 @@ export default function TabLayout() {
         name="history"
         options={{
           title: 'History',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="clock.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons size={28} name="list-outline" color={color} />,
           tabBarItemStyle: {
             flex: 17, // Equal flex value for all tabs
             alignItems: 'center', // Center icons horizontally
@@ -71,12 +89,16 @@ export default function TabLayout() {
         name="home"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-          tabBarItemStyle: {
-            flex: 15, // Equal flex value for all tabs
-            alignItems: 'center', // Center icons horizontally
-            justifyContent: 'center', // Center the icon vertically
+          tabBarButton: () => {
+            const router = useRouter();
+
+            return (
+              <Pressable onPress={() => router.push('/home')}>
+                <CustomHomeTab color={isHomeFocused ? '#CC5500' : 'gray'} />
+              </Pressable>
+            );
           },
+          tabBarLabel: () => null,
         }}
       />
 
@@ -85,7 +107,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons size={28} name="person-outline" color={color} />,
           tabBarItemStyle: {
             flex: 15, // Equal flex value for all tabs
             alignItems: 'center', // Center icons horizontally
@@ -95,6 +117,7 @@ export default function TabLayout() {
       />
 
       {/* Hidden screens */}
+      
       <Tabs.Screen
         name="index"
         options={{
@@ -127,6 +150,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-
+  
   );
 }
