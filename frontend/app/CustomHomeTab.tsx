@@ -23,7 +23,7 @@ const CustomHomeTab = ({ color }: CustomHomeTabProps) => {
     <TouchableOpacity onPress={handlePress} style={styles.container}>
       <View style={styles.circle}>
         <View style={styles.glassEffect} />
-        <IconSymbol size={36} name="house.fill" color="white" />
+        <IconSymbol size={39} name="house.fill" color="white" />
       </View>
     </TouchableOpacity>
   );
@@ -33,16 +33,16 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -20,
+    marginTop: -35,
   },
   circle: {
-    width: 68,
-    height: 68,
-    borderRadius: 36,
+    width: 75,
+    height: 75,
+    borderRadius: 39,
     backgroundColor: '#CC5500',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 5,
+    elevation: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,

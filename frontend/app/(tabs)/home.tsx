@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Button, StyleSheet } from "react-native";
+import { View, Button, StyleSheet, SafeAreaView } from "react-native";
 import axios from "axios";
 import {
   ExpoSpeechRecognitionModule,
@@ -15,6 +15,10 @@ import { ElevenLabsClient, play } from "elevenlabs";
  import { Audio } from "expo-av";
  import * as FileSystem from "expo-file-system";
  import { Buffer } from 'buffer';
+ import { spline } from '@georgedoescode/spline';
+import { createNoise2D } from 'simplex-noise';
+import { Canvas, LinearGradient, Path, useClock, vec} from '@shopify/react-native-skia';
+
 
 // Define interfaces for WebSocket messages
 interface InstructionMessage {

@@ -43,10 +43,10 @@ export default function TabLayout() {
           }
           : {
             flexDirection: 'row',
-            justifyContent: 'space-evenly',
+            justifyContent: 'space-between',
             backgroundColor: 'black',
             //position: 'absolute',
-            bottom: 0,
+            bottom: 3,
             height: 100,
             width: '100%',
             paddingHorizontal: 0,
@@ -64,7 +64,7 @@ export default function TabLayout() {
         },
         tabBarItemStyle: {
           backgroundColor: 'transparent', // Add this
-          flex: 1,
+          flex: 0,
           alignItems: 'center',
           justifyContent: 'center',
         },
@@ -102,14 +102,15 @@ export default function TabLayout() {
         }}
       />
 
+
       {/* Settings tab */}
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="person-outline" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={34} name="gear" color={color} />,
           tabBarItemStyle: {
-            flex: 15, // Equal flex value for all tabs
+            flex: 17, // Equal flex value for all tabs
             alignItems: 'center', // Center icons horizontally
             justifyContent: 'center', // Center the icon vertically
           },
