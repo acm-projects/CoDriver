@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Button, StyleSheet, SafeAreaView } from "react-native";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { View, Button, StyleSheet, Image, SafeAreaView, Text, TextInput, TouchableOpacity, Platform } from "react-native";
 import axios from "axios";
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from "expo-speech-recognition";
-import { Text, TextInput, TouchableOpacity, Image, Modal } from "react-native";
 import { Animated, Easing } from "react-native";
 import * as Speech from "expo-speech";
 import { useAuth } from '../../context/AuthContext';
@@ -15,10 +14,9 @@ import { ElevenLabsClient, play } from "elevenlabs";
  import { Audio } from "expo-av";
  import * as FileSystem from "expo-file-system";
  import { Buffer } from 'buffer';
- import { spline } from '@georgedoescode/spline';
+import { spline } from '@georgedoescode/spline';
 import { createNoise2D } from 'simplex-noise';
 import { Canvas, LinearGradient, Path, useClock, vec} from '@shopify/react-native-skia';
-
 
 // Define interfaces for WebSocket messages
 interface InstructionMessage {
@@ -35,7 +33,7 @@ type WebSocketType = WebSocket | null;
 export default function HomeScreen() {
   // Lock to prevent concurrent playback
   const audioLock = useRef(false);
- 
+
   // Enqueue initial navigation message with delay
   const enqueueInitialNavigation = async (destination: string) => {
     const initialMessage = `Starting navigation to ${destination}`;
@@ -71,7 +69,7 @@ export default function HomeScreen() {
       }
 
       const arrayBuffer = await response.arrayBuffer();
-      path = `${FileSystem.documentDirectory}speech-${Date.now()}.mp3`;
+      path = `<span class="math-inline">\{FileSystem\.documentDirectory\}speech\-</span>{Date.now()}.mp3`;
       await FileSystem.writeAsStringAsync(path, Buffer.from(arrayBuffer).toString("base64"), {
         encoding: FileSystem.EncodingType.Base64,
       });
@@ -116,6 +114,85 @@ export default function HomeScreen() {
     temperature: number;
     humorLevel: number;
   }>({ frequency: 0.5, temperature: 0.8, humorLevel: 0.5 });
+
+  // Skia Blob Animation
+  const noise = createNoise2D();
+  const noiseStep = 0.005;
+  const clock = useClock();
+  let endGradientOffset = 0;
+
+  // State to store points for the blob
+  const [points, setPoints] = useState(createPoints);
+
+  // Create points function for the blob
+  function createPoints() {
+    const points = [];
+    const numPoints = 6;
+    const angleStep = (Math.PI * 2) / numPoints;
+    const rad = 75;
+    for (let i = 1; i <= numPoints; i++) {
+      const theta = i * angleStep;
+      const x = 100 + Math.cos(theta) * rad;
+      const y = 100 + Math.sin(theta) * rad;
+      points.push({
+        x: x,
+        y: y,
+        originX: x,
+        originY: y,
+        noiseOffsetX: Math.random() * 1000,
+        noiseOffsetY: Math.random() * 1000,
+      });
+    }
+    return points;
+  }
+
+  // Map numbers to new range for the blob
+  const mapNumbers = (
+    n: number,
+    start1: number,
+    end1: number,
+    start2: number,
+    end2: number
+  ): number => {
+    return ((n - start1) / (end1 - start1)) * (end2 - start2) + start2;
+  };
+
+  // Animate function for the blob
+  const animateBlob = () => {
+    setPoints((prevPoints) => {
+      const newPoints = prevPoints.map((point) => {
+        const nX = noise(point.noiseOffsetX, point.noiseOffsetX);
+        const nY = noise(point.noiseOffsetY, point.noiseOffsetY);
+        const x = mapNumbers(nX, -1, 1, point.originX - 20, point.originX + 20);
+        const y = mapNumbers(nY, -1, 1, point.originY - 20, point.originY + 20);
+        point.x = x;
+        point.y = y;
+        point.noiseOffsetX += noiseStep;
+        point.noiseOffsetY += noiseStep;
+        return point;
+      });
+      return newPoints;
+    });
+  };
+
+  // Run animation on each clock tick for the blob
+  useEffect(() => {
+    const interval = setInterval(() => {
+      animateBlob();
+    }, 30); // Adjust the interval for the animation speed
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, []);
+
+  const path = useMemo(() => {
+    return spline(points, 1, true);
+  }, [points]);
+
+  const endGradientCoordinate = useMemo(() => {
+    endGradientOffset = noiseStep/2;
+    const endNoise = noise(endGradientOffset, endGradientOffset);
+    const newValue = mapNumbers(endNoise, -1, 1, 0, 360);
+    return vec(256, newValue);
+  },[clock])
 
   const handleInputChange = (text: string) => {
     setDestination(text); // Update destination state when user types
@@ -167,7 +244,7 @@ export default function HomeScreen() {
             while (audioQueue.current.length > 0 || isPlayingRef.current) {
               await new Promise((resolve) => setTimeout(resolve, 100));
             }
-  
+
             stopListening();
             setBackendResponse(textToSpeak);
             await speakResponse(textToSpeak);
@@ -194,16 +271,9 @@ export default function HomeScreen() {
     return () => {
       if (ws.current) ws.current.close();
     };
-  }, []);
+  }, [ipAddress]);
 
   // Centralized function to handle speaking
-  // Modified speakResponse function to use ElevenLabs
-  // Modified speakResponse with lock and sequential queue processing
-
-  // Centralized function to handle speaking
-    // Centralized function to handle speaking
-  // Modified speakResponse function to use ElevenLabs
-  // Modified speakResponse with lock and sequential queue processing
   const speakResponse = async (text: string) => {
     if (!text) return;
 
@@ -237,8 +307,6 @@ export default function HomeScreen() {
     }
   };
 
-    
-
   // Check permissions and initialize listening
   useEffect(() => {
     const initialize = async () => {
@@ -252,14 +320,6 @@ export default function HomeScreen() {
     };
     initialize();
   }, []);
-
-  // Handler for text-to-speech with muting - REMOVED
-  // Since we now handle text-to-speech directly in the WebSocket onmessage handler
-
-  const handleTextToSpeech = () => {
-    const thingToSay = transcript;
-    Speech.speak(thingToSay);
-  };
 
   const checkPermissions = async () => {
     const { status, granted } = await ExpoSpeechRecognitionModule.getPermissionsAsync();
@@ -371,7 +431,7 @@ export default function HomeScreen() {
     }
 
     try {
-      const response = await axios.post(`http://${ipAddress}:8000/api/history/start-trip`, 
+      const response = await axios.post(`http://${ipAddress}:8000/api/history/start-trip`,
         { destination },
         {
           headers: {
@@ -797,6 +857,9 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  canvas: {
+    flex: 1, // Make the canvas take up the entire screen
+  },
  destinationInput: {
    flex: 1,
    fontSize: 18,
