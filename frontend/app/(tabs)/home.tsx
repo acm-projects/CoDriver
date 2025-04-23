@@ -132,9 +132,9 @@ export default function HomeScreen() {
   // Create points function for the blob
   function createPoints() {
     const points = [];
-    const numPoints = 6;
+    const numPoints = 5;
     const angleStep = (Math.PI * 2) / numPoints;
-    const rad = 75;
+    const rad = 100;
     for (let i = 1; i <= numPoints; i++) {
       const theta = i * angleStep;
       const x = 100 + Math.cos(theta) * rad;
@@ -866,12 +866,12 @@ export default function HomeScreen() {
        <Canvas style={styles.blobImage}>
          <Path
            path={path}
-           color="#2D2A38"
+           color="#f57a2d"
          >
            <LinearGradient
              start={vec(0, 0)}
              end={endGradientCoordinate}
-             colors={['#2D2A38', '#433D5C']}
+             colors={['#f57a2d', '#f57a2d']}
            />
          </Path>
        </Canvas>
@@ -920,8 +920,22 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  canvas: {
+  container: {
     flex: 1,
+    backgroundColor: 'black',
+  },
+  blobImage: {
+    position: 'absolute',
+    width: '90%', // Adjust width as needed
+    height: 'auto', // Or a percentage height if you prefer
+    top: '50%',
+    left: '28%', // To horizontally center if needed
+    alignSelf: 'center', // Alternative for horizontal centering
+    transform: [{ translateY: -450 }],
+  },
+  canvas: {
+    width: '100%',
+    height: '100%', // Make Canvas fill its parent
   },
  destinationInput: {
    flex: 1,
@@ -967,10 +981,6 @@ const styles = StyleSheet.create({
    alignItems: 'center', // Center them vertically
    marginLeft: 20
  },
- container: {
-   flex: 1,
-   backgroundColor: 'black',
- },
 
  topLeftContainer: {
    position: 'absolute',
@@ -988,13 +998,6 @@ const styles = StyleSheet.create({
    color: 'white',
    fontSize: 24,
    fontWeight: 'bold',
- },
- blobImage: {
-   position: 'absolute',
-   width: '100%',
-   height: '100%',
-   top: '15%',
-   alignSelf: 'center',
  },
  modalContainer: {
    flex: 1,
