@@ -534,7 +534,7 @@ app.post("/startSimulationDirections", async (req, res) => {
       // Simulate movement through the route points
       for (const point of routePoints) {
         await updatePosition(point.lat, point.lng);
-        await new Promise(resolve => setTimeout(resolve, 5000)); // wait 5 seconds between updates
+        await new Promise(resolve => setTimeout(resolve, 20000)); // wait 5 seconds between updates
       }
 
       // Stop hazard monitoring and navigation when complete

@@ -194,7 +194,8 @@ export default function Example() {
               <View style={styles.btn}>
                 <Image
                   source={{
-                    uri: 'https://e7.pngegg.com/pngimages/4/438/png-clipart-spotify-logo-spotify-mobile-app-computer-icons-app-store-music-free-icon-spotify-miscellaneous-logo.png',
+                    uri:'https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_White.png'
+                    //uri: 'https://e7.pngegg.com/pngimages/4/438/png-clipart-spotify-logo-spotify-mobile-app-computer-icons-app-store-music-free-icon-spotify-miscellaneous-logo.png',
                   }}
                   style={styles.spotifyLogo}
                 />
@@ -361,14 +362,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderWidth: 1,
-    backgroundColor: '#1ED760',
+    //backgroundColor: '#1ED760',
     borderColor: '#1ED760',
   },
   btnText: {
     fontSize: 18,
     lineHeight: 26,
     fontWeight: '600',
-    color: '#171938',
+    color: '#ffffff',
   },
   logOutBtn: {
     flexDirection: 'row',
@@ -378,14 +379,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderWidth: 1,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#ffffff',
     borderColor: '#ffffff',
   },
   logOutBtnText: {
     fontSize: 18,
     lineHeight: 26,
     fontWeight: '600',
-    color: '#fff',
+    color: '#000000',
   },
 
 

@@ -81,18 +81,30 @@ const SpotifyBar: React.FC<SpotifyBarProps> = ({ ipAddress }) => {
       {/* Left Section: Album Cover */}
       <View style={styles.leftSection}>
         <Image
-          source={typeof songInfo.albumCover === 'string' ? { uri: songInfo.albumCover } : songInfo.albumCover || require('../assets/images/album_default.png')}
-          //source={songInfo.albumCover ? { uri: songInfo.albumCover } : require('../assets/images/album_default.png')}
+          source={
+            songInfo.albumCover && typeof songInfo.albumCover === 'string' 
+              ? { uri: songInfo.albumCover }
+              : require('../assets/images/album_default.png')
+          }
           style={styles.albumCover}
-          onError={(e) => console.error('Error loading album cover:', e.nativeEvent.error)}
-          onLoad={() => console.log('Album cover loaded successfully', songInfo.albumCover)}
+          onError={(e) => {
+            console.error('Error loading album cover:', e.nativeEvent.error);
+            // Force fallback to default image
+            setSongInfo(prev => ({
+              ...prev,
+              albumCover: require('../assets/images/album_default.png')
+            }));
+          }}
         />
       </View>
 
       {/* Right Section: Song Info and Controls */}
       <View style={styles.rightSection}>
         {/* Song Title, Artist, and Album */}
-        <View style={styles.textContainer}>
+        <View style={[
+          styles.textContainer,
+          !songInfo.title && styles.emptyTextContainer
+        ]}>
           <Text style={styles.spotifyTabText} numberOfLines={2} ellipsizeMode="tail">
             {songInfo.title} · {songInfo.artist} · {songInfo.album}
           </Text>
@@ -206,6 +218,9 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
     minHeight: 40,
+  },
+  emptyTextContainer: {
+    justifyContent: 'center',
   },
 });
 

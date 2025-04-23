@@ -51,7 +51,7 @@ export default function HomeScreen() {
       const response = await fetch(url, {
         method: "POST",
         headers: {
-          "xi-api-key": "sk_cd8d6cb620b840816c9ffa1f64f8b7071dc559deaddcc1d3", // Replace with secure storage
+          "xi-api-key": "sk_053a15c8722a862c73ba80150ea64dfc8eb5134947d94a6d", // Replace with secure storage
           "Content-Type": "application/json",
           "Accept": "audio/mpeg",
         },
