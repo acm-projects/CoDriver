@@ -15,6 +15,9 @@ import { ElevenLabsClient, play } from "elevenlabs";
  import { Audio } from "expo-av";
  import * as FileSystem from "expo-file-system";
  import { Buffer } from 'buffer';
+ import { spline } from '@georgedoescode/spline';
+import { createNoise2D } from 'simplex-noise';
+import { Canvas, LinearGradient, Path, useClock, vec} from '@shopify/react-native-skia';
 
 // Define interfaces for WebSocket messages
 interface InstructionMessage {
@@ -113,6 +116,90 @@ export default function HomeScreen() {
     temperature: number;
     humorLevel: number;
   }>({ frequency: 0.5, temperature: 0.8, humorLevel: 0.5 });
+  // Used for checking status of if voice is active
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
+
+  // Skia Blob Animation
+  const noise = createNoise2D();
+  const noiseStep = 0.005;
+  const clock = useClock();
+  let endGradientOffset = 0;
+
+  // State to store points for the blob
+  const [points, setPoints] = useState(createPoints);
+
+
+  // Create points function for the blob
+  function createPoints() {
+    const points = [];
+    const numPoints = 6;
+    const angleStep = (Math.PI * 2) / numPoints;
+    const rad = 75;
+    for (let i = 1; i <= numPoints; i++) {
+      const theta = i * angleStep;
+      const x = 100 + Math.cos(theta) * rad;
+      const y = 100 + Math.sin(theta) * rad;
+      points.push({
+        x: x,
+        y: y,
+        originX: x,
+        originY: y,
+        noiseOffsetX: Math.random() * 1000,
+        noiseOffsetY: Math.random() * 1000,
+      });
+    }
+    return points;
+  }
+
+  // Map numbers to new range for the blob
+  const mapNumbers = (
+    n: number,
+    start1: number,
+    end1: number,
+    start2: number,
+    end2: number
+  ): number => {
+    return ((n - start1) / (end1 - start1)) * (end2 - start2) + start2;
+  };
+
+  // Modify the animateBlob function to consider voice activity
+  const animateBlob = () => {
+    setPoints((prevPoints) => {
+      const newPoints = prevPoints.map((point) => {
+        const nX = noise(point.noiseOffsetX, point.noiseOffsetX);
+        const nY = noise(point.noiseOffsetY, point.noiseOffsetY);
+        // Increase animation intensity when voice is active
+        const intensity = isVoiceActive ? 40 : 20;
+        const x = mapNumbers(nX, -1, 1, point.originX - intensity, point.originX + intensity);
+        const y = mapNumbers(nY, -1, 1, point.originY - intensity, point.originY + intensity);
+        point.x = x;
+        point.y = y;
+        point.noiseOffsetX += isVoiceActive ? noiseStep * 2 : noiseStep;
+        point.noiseOffsetY += isVoiceActive ? noiseStep * 2 : noiseStep;
+        return point;
+      });
+      return newPoints;
+    });
+  };
+
+  // Run animation on each clock tick for the blob
+  useEffect(() => {
+    const interval = setInterval(() => {
+      animateBlob();
+    }, 30); // Adjust the interval for the animation speed
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, []);
+
+  const path = useMemo(() => {
+    return spline(points, 1, true);
+  }, [points]);
+
+  const endGradientCoordinate = useMemo(() => {
+    endGradientOffset = noiseStep/2;
+    const endNoise = noise(endGradientOffset, endGradientOffset);
+    const newValue = mapNumbers(endNoise, -1, 1, 0, 360);
+    return vec(256, newValue);
+  },[clock])
 
 
   const handleInputChange = (text: string) => {
@@ -280,14 +367,24 @@ export default function HomeScreen() {
     setHasPermission(true);
   };
 
-  // Event listeners for speech recognition
-  useSpeechRecognitionEvent("start", () => setRecognizing(true));
-  useSpeechRecognitionEvent("end", () => setRecognizing(false));
+  // Update the speech recognition event handlers
+  useSpeechRecognitionEvent("start", () => {
+    setRecognizing(true);
+    setIsVoiceActive(true);
+  });
+
+  useSpeechRecognitionEvent("end", () => {
+    setRecognizing(false);
+    setIsVoiceActive(false);
+  });
+
   useSpeechRecognitionEvent("result", (event) => {
     const speechResult = event.results[0]?.transcript || "";
     setTranscript(speechResult);
+    setIsVoiceActive(true); // Keep animation active while speaking
     console.log("Speech to Text Result:", speechResult);
   });
+
   useSpeechRecognitionEvent("error", (event: { error: string; message: string }) => {
     console.log("Error:", event.error, "Message:", event.message);
   });
@@ -766,11 +863,18 @@ export default function HomeScreen() {
 
      <View style={styles.container}>
        {/* Background AI-themed blob image */}
-       <Image
-         source={require('../../assets/images/AI_Blob.png')}
-         style={styles.blobImage}
-         resizeMode="contain"
-       />
+       <Canvas style={styles.blobImage}>
+         <Path
+           path={path}
+           color="#2D2A38"
+         >
+           <LinearGradient
+             start={vec(0, 0)}
+             end={endGradientCoordinate}
+             colors={['#2D2A38', '#433D5C']}
+           />
+         </Path>
+       </Canvas>
      </View>
 
      {/* Destination Button at the bottom */}
@@ -887,10 +991,9 @@ const styles = StyleSheet.create({
  },
  blobImage: {
    position: 'absolute',
-   width: 670,
-   height: 630,
-   marginTop: -680,
-   top: '25%',
+   width: '100%',
+   height: '100%',
+   top: '15%',
    alignSelf: 'center',
  },
  modalContainer: {

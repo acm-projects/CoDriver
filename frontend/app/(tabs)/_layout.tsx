@@ -43,7 +43,7 @@ export default function TabLayout() {
           }
           : {
             flexDirection: 'row',
-            justifyContent: 'space-evenly',
+            justifyContent: 'space-between',
             backgroundColor: 'black',
             //position: 'absolute',
             bottom: 0,
@@ -107,9 +107,9 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="person-outline" color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons size={34} name="person-outline" color={color} />,
           tabBarItemStyle: {
-            flex: 15, // Equal flex value for all tabs
+            flex: 17, // Equal flex value for all tabs
             alignItems: 'center', // Center icons horizontally
             justifyContent: 'center', // Center the icon vertically
           },
