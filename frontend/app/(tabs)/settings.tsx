@@ -24,6 +24,7 @@ export default function Example() {
   const router = useRouter();
   const { token } = useAuth();
   const [ipAddress, setIpAddress] = useState('');
+  const { email } = useAuth();
 
   // Get IP Address for API calls
   useEffect(() => {
@@ -107,6 +108,15 @@ export default function Example() {
         });
       }
     }
+
+  };
+
+  const displayName = (email: string | null) => {
+    if (!email){
+      return '';
+    }
+
+    return email.split('@')[0];
   };
 
   return (
@@ -138,7 +148,7 @@ export default function Example() {
               }}
               style={styles.profileImage}
             />
-            <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>Sourish Reddy</Text>
+            <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>John Cole</Text>
           </View>
           
           <View style={styles.toggleContainer}>

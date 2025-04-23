@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Button, StyleSheet } from "react-native";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { View, Button, SafeAreaView, Platform, StyleSheet } from "react-native";
 import axios from "axios";
 import {
   ExpoSpeechRecognitionModule,
@@ -51,7 +51,7 @@ export default function HomeScreen() {
       const response = await fetch(url, {
         method: "POST",
         headers: {
-          "xi-api-key": "sk_550053542174a9cb083e460d2d6683efec0b83e2554edec2", // Replace with secure storage
+          "xi-api-key": "sk_cd8d6cb620b840816c9ffa1f64f8b7071dc559deaddcc1d3", // Replace with secure storage
           "Content-Type": "application/json",
           "Accept": "audio/mpeg",
         },
@@ -94,6 +94,7 @@ export default function HomeScreen() {
       }
     }
   };
+  
   const { token } = useAuth();
   const ws = useRef<WebSocketType>(null);
   const [recognizing, setRecognizing] = useState(true); // Start with true to unmute
@@ -113,6 +114,7 @@ export default function HomeScreen() {
     humorLevel: number;
   }>({ frequency: 0.5, temperature: 0.8, humorLevel: 0.5 });
 
+
   const handleInputChange = (text: string) => {
     setDestination(text); // Update destination state when user types
   };
@@ -130,14 +132,14 @@ export default function HomeScreen() {
 
   // WebSocket setup
   useEffect(() => {
-    if (!ipAddress) return; // Don't connect if IP address is not available
+    if (!ipAddress) return;
 
     const connectWebSocket = () => {
       console.log("Attempting to connect to WebSocket at:", `ws://${ipAddress}:8000/`);
       ws.current = new WebSocket(`ws://${ipAddress}:8000/`);
 
       ws.current.onopen = () => {
-        console.log("WebSocket connected");
+        console.log("WebSocket connected successfully");
       };
 
       ws.current.onmessage = async (event: WebSocketMessageEvent) => {
@@ -150,23 +152,22 @@ export default function HomeScreen() {
             textToSpeak = parsedData.data.instruction || "";
           } else if (parsedData.type === "complete") {
             textToSpeak = parsedData.data.message || "You have reached your destination";
-          } else if(parsedData.type === "newHazard") {
+          } else if (parsedData.type === "newHazard") {
             textToSpeak = parsedData.data.instruction || "There's a hazard detected in your area, please be cautious";
-          } else if(parsedData.type === "noHazard") {
-            console.log("there is no hazard in the area");
-          } else {
-            console.log("Received message type:", parsedData.type);
+          } else if (parsedData.type === "instruction") {
+            textToSpeak = parsedData.data.instruction || "";
           }
 
-          if (textToSpeak) {
-            // Wait for initial message to finish
-            while (audioQueue.current.length > 0 || isPlayingRef.current) {
-              await new Promise((resolve) => setTimeout(resolve, 100));
-            }
-  
+          if (textToSpeak && textToSpeak.trim()) {
+            console.log("Preparing to speak:", textToSpeak);
             stopListening();
             setBackendResponse(textToSpeak);
-            await speakResponse(textToSpeak);
+            
+            try {
+              await speakResponse(textToSpeak);
+            } catch (error) {
+              console.error("Error speaking response:", error);
+            }
           }
         } catch (error) {
           console.error("Error processing WebSocket message:", error);
@@ -176,60 +177,66 @@ export default function HomeScreen() {
 
       ws.current.onerror = (ev: Event) => {
         console.error("WebSocket Error:", ev);
-        // Attempt to reconnect after a delay
         setTimeout(connectWebSocket, 5000);
       };
 
       ws.current.onclose = () => {
-        console.log("WebSocket disconnected");
-        // Attempt to reconnect after a delay
+        console.log("WebSocket disconnected, attempting to reconnect...");
         setTimeout(connectWebSocket, 5000);
       };
     };
 
+    connectWebSocket();
+
     return () => {
-      if (ws.current) ws.current.close();
+      if (ws.current) {
+        console.log("Cleaning up WebSocket connection");
+        ws.current.close();
+      }
     };
-  }, []);
+  }, [ipAddress]);
 
   // Centralized function to handle speaking
-  // Modified speakResponse function to use ElevenLabs
-  // Modified speakResponse with lock and sequential queue processing
-
-  // Centralized function to handle speaking
-    // Centralized function to handle speaking
   // Modified speakResponse function to use ElevenLabs
   // Modified speakResponse with lock and sequential queue processing
   const speakResponse = async (text: string) => {
-    if (!text) return;
+    if (!text || !text.trim()) return;
 
+    console.log("Adding to speech queue:", text);
     audioQueue.current.push(text);
-    if (audioLock.current) return;
+    
+    if (audioLock.current) {
+      console.log("Audio locked, waiting in queue");
+      return;
+    }
 
     audioLock.current = true;
 
-    while (audioQueue.current.length > 0) {
-      const nextText = audioQueue.current[0];
-      if (recognizing) stopListening();
-      setIsSpeaking(true);
+    try {
+      while (audioQueue.current.length > 0) {
+        const nextText = audioQueue.current[0];
+        if (recognizing) stopListening();
+        setIsSpeaking(true);
 
-      try {
-        await speakWithElevenLabs(nextText);
-        audioQueue.current.shift();
-      } catch (error) {
-        console.error("TTS error:", error);
-        audioQueue.current.shift();
-      } finally {
-        setIsSpeaking(false);
+        try {
+          console.log("Now speaking:", nextText);
+          await speakWithElevenLabs(nextText);
+          audioQueue.current.shift();
+        } catch (error) {
+          console.error("TTS error:", error);
+          audioQueue.current.shift();
+        } finally {
+          setIsSpeaking(false);
+        }
+
+        // Small delay between messages
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-
-    audioLock.current = false;
-
-    if (audioQueue.current.length === 0) {
-      setTimeout(startListening, 500);
+    } finally {
+      audioLock.current = false;
+      if (audioQueue.current.length === 0) {
+        setTimeout(startListening, 500);
+      }
     }
   };
 
@@ -390,21 +397,37 @@ export default function HomeScreen() {
   // Add conversation to current trip
   const addConversation = async (userMessage: string, aiResponse: string) => {
     if (!token || !currentTripId || !ipAddress) {
-      console.error('Missing required data for adding conversation');
+      console.log('Missing required data for adding conversation:', {
+        hasToken: !!token,
+        hasTripId: !!currentTripId,
+        hasIpAddress: !!ipAddress
+      });
       return;
     }
 
+    // Ensure we have valid strings for both messages
+    const validUserMessage = userMessage?.trim() || "User initiated navigation";
+    const validAiResponse = aiResponse?.trim() || "Navigation started";
+
     try {
       await axios.post(`http://${ipAddress}:8000/api/history/trip/${currentTripId}/conversations`,
-        { userMessage, aiResponse },
+        {
+          userMessage: validUserMessage,
+          aiResponse: validAiResponse
+        },
         {
           headers: {
             'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         }
       );
     } catch (error) {
       console.error('Error adding conversation:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Response data:', error.response?.data);
+        console.error('Status:', error.response?.status);
+      }
     }
   };
 
@@ -793,6 +816,9 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  canvas: {
+    flex: 1,
+  },
  destinationInput: {
    flex: 1,
    fontSize: 18,
