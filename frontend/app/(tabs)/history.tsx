@@ -18,20 +18,10 @@ export default function HistoryPage() {
   const { token } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
-  const [ipAddress, setIpAddress] = useState('');
+ 
 
-  // Get IP Address for API calls
-  useEffect(() => {
-    const getIpAddress = async () => {
-      try {
-        const ip = await Network.getIpAddressAsync();
-        setIpAddress(ip);
-      } catch (error) {
-        console.error('Failed to get IP address:', error);
-      }
-    };
-    getIpAddress();
-  }, []);
+  const [ipAddress, setIpAddress] = useState('10.0.0.215');
+
 
   // Fetch trips from backend
   useEffect(() => {

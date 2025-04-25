@@ -75,7 +75,7 @@ class AIController {
             for (const [command, details] of Object.entries(musicCommands)) {
                 if (aiResponse.includes(command)) {
                     try {
-                        await axios.post(`http://localhost:8000${details.endpoint}`);
+                        await axios.post(`http://10.0.0.215:8000${details.endpoint}`);
                         return details.action;
                     } catch (error) {
                         console.error('Error executing music command:', error);
@@ -346,7 +346,7 @@ class AIController {
             const conversationStarter = this.generateConversationStarter();
             
             // use the /command route to process the conversation starter
-            const response = await axios.post('http://localhost:8000/command', {
+            const response = await axios.post('http://10.0.0.215:8000/command', {
                 userInput: conversationStarter,
                 sessionId: 'auto'
             });
