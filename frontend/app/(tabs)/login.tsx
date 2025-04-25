@@ -24,23 +24,12 @@ export default function Example() {
     password: '',
   });
 
-  const [ipAddress, setIpAddress] = useState('');
+  const [ipAddress, setIpAddress] = useState('172.20.10.4');
   const [alertMessage, setAlertMessage] = useState('');
   const [alertVisible, setAlertVisible] = useState(false);
 
   // Fetch the device's IP address once the component is mounted
-  useEffect(() => {
-    const getIpAddress = async () => {
-      try {
-        const ip = await Network.getIpAddressAsync();
-        setIpAddress(ip);
-        console.log('Device IP address:', ip); // Log IP address for debugging
-      } catch (error) {
-        console.error('Failed to get IP address:', error);
-      }
-    };
-    getIpAddress();
-  }, []);
+  
 
 
   const handleLogin = async () => {

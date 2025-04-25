@@ -17,19 +17,9 @@ const ChatDetailScreen = () => {
   const { token } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [ipAddress, setIpAddress] = useState('');
+  const [ipAddress, setIpAddress] = useState('172.20.10.4');
 
-  useEffect(() => {
-    const getIpAddress = async () => {
-      try {
-        const ip = await Network.getIpAddressAsync();
-        setIpAddress(ip);
-      } catch (error) {
-        console.error('Failed to get IP address:', error);
-      }
-    };
-    getIpAddress();
-  }, []);
+  
 
   useEffect(() => {
     const fetchConversations = async () => {

@@ -44,7 +44,7 @@ const AISettingsSlider: React.FC<AISettingsSliderProps> = ({
   const fetchAISettings = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`http://localhost:8000/api/ai-settings/${userId}`);
+      const response = await axios.get(`http://172.20.10.4:8000/api/ai-settings/${userId}`);
       const { temperature, humorLevel, frequency } = response.data;
       
       setTemperature(temperature || 0.8);
@@ -68,7 +68,7 @@ const AISettingsSlider: React.FC<AISettingsSliderProps> = ({
       const roundedValue = Math.round(value * 10) / 10;
       setTemperature(roundedValue);
       
-      await axios.post('http://localhost:8000/changeTemperature', {
+      await axios.post('http://172.20.10.4:8000/changeTemperature', {
         temperature: roundedValue,
         userId,
       });
@@ -90,7 +90,7 @@ const AISettingsSlider: React.FC<AISettingsSliderProps> = ({
       const roundedValue = Math.round(value * 10) / 10;
       setHumorLevel(roundedValue);
       
-      const response = await axios.post('http://localhost:8000/setHumorLevel', {
+      const response = await axios.post('http://172.20.10.4:8000/setHumorLevel', {
         humorLevel: roundedValue,
         userId,
       });
@@ -116,7 +116,7 @@ const AISettingsSlider: React.FC<AISettingsSliderProps> = ({
       const roundedValue = Math.round(value * 10) / 10;
       setFrequency(roundedValue);
       
-      await axios.post('http://localhost:8000/setFrequency', {
+      await axios.post('http://172.20.10.4:8000/setFrequency', {
         frequency: roundedValue,
         userId,
       });

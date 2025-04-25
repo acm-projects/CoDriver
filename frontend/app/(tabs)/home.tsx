@@ -15,9 +15,7 @@ import { ElevenLabsClient, play } from "elevenlabs";
  import { Audio } from "expo-av";
  import * as FileSystem from "expo-file-system";
  import { Buffer } from 'buffer';
- import { spline } from '@georgedoescode/spline';
-import { createNoise2D } from 'simplex-noise';
-import { Canvas, LinearGradient, Path, useClock, vec} from '@shopify/react-native-skia';
+
 
 // Define interfaces for WebSocket messages
 interface InstructionMessage {
@@ -54,13 +52,13 @@ export default function HomeScreen() {
       const response = await fetch(url, {
         method: "POST",
         headers: {
-          "xi-api-key": "sk_053a15c8722a862c73ba80150ea64dfc8eb5134947d94a6d", // Replace with secure storage
+          "xi-api-key": "sk_fe8cebb327bd647806f97ed36228c67411a568da7ad749de", // Replace with secure storage
           "Content-Type": "application/json",
           "Accept": "audio/mpeg",
         },
         body: JSON.stringify({
           text,
-          model_id: "eleven_multilingual_v2",
+          model_id: "eleven_flash_v2_5",
           output_format: "mp3_44100_128",
         }),
       });
@@ -108,7 +106,7 @@ export default function HomeScreen() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [destination, setDestination] = useState("");
   const [currentTripId, setCurrentTripId] = useState<string | null>(null);
-  const [ipAddress, setIpAddress] = useState('');
+  const [ipAddress, setIpAddress] = useState('172.20.10.4');
   const [lastUserSpeechTime, setLastUserSpeechTime] = useState<number>(Date.now());
   const [silenceTimer, setSilenceTimer] = useState<NodeJS.Timeout | null>(null);
   const [aiSettings, setAiSettings] = useState<{
@@ -119,7 +117,7 @@ export default function HomeScreen() {
   // Used for checking status of if voice is active
   const [isVoiceActive, setIsVoiceActive] = useState(false);
 
-  // Skia Blob Animation
+  /*// Skia Blob Animation
   const noise = createNoise2D();
   const noiseStep = 0.005;
   const clock = useClock();
@@ -199,7 +197,7 @@ export default function HomeScreen() {
     const endNoise = noise(endGradientOffset, endGradientOffset);
     const newValue = mapNumbers(endNoise, -1, 1, 0, 360);
     return vec(256, newValue);
-  },[clock])
+  },[clock]) */
 
 
   const handleInputChange = (text: string) => {
@@ -424,18 +422,7 @@ export default function HomeScreen() {
     }
   };
 
-  // Get IP Address for API calls
-  useEffect(() => {
-    const getIpAddress = async () => {
-      try {
-        const ip = await Network.getIpAddressAsync();
-        setIpAddress(ip);
-      } catch (error) {
-        console.error('Failed to get IP address:', error);
-      }
-    };
-    getIpAddress();
-  }, []);
+  
 
   // Navigation function
   const startNavigation = async (dest: string) => {
@@ -861,20 +848,13 @@ export default function HomeScreen() {
 
     <SpotifyBar ipAddress={ipAddress} />
 
-     <View style={styles.container}>
+    <View style={styles.container}>
        {/* Background AI-themed blob image */}
-       <Canvas style={styles.blobImage}>
-         <Path
-           path={path}
-           color="#f57a2d"
-         >
-           <LinearGradient
-             start={vec(0, 0)}
-             end={endGradientCoordinate}
-             colors={['#f57a2d', '#f57a2d']}
-           />
-         </Path>
-       </Canvas>
+       <Image
+         source={require('../../assets/images/AI_Blob.png')}
+         style={styles.blobImage}
+         resizeMode="contain"
+       />
      </View>
 
      {/* Destination Button at the bottom */}
@@ -926,12 +906,11 @@ const styles = StyleSheet.create({
   },
   blobImage: {
     position: 'absolute',
-    width: '90%', // Adjust width as needed
-    height: 'auto', // Or a percentage height if you prefer
-    top: '50%',
-    left: '28%', // To horizontally center if needed
-    alignSelf: 'center', // Alternative for horizontal centering
-    transform: [{ translateY: -450 }],
+    width: 670,
+    height: 630,
+    marginTop: -680,
+    top: '25%',
+    alignSelf: 'center',
   },
   canvas: {
     width: '100%',
