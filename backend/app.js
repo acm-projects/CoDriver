@@ -504,16 +504,16 @@ app.post("/startSimulationDirections", async (req, res) => {
 
   try {
     // Connect to WebSocket
-    const ws = new WebSocket('ws://localhost:8000');
+    const ws = new WebSocket('ws://172.20.10.4:8000');
     
     ws.on('open', async () => {
       console.log('Connected to server');
 
       // Enable simulation mode
-      await axios.post('http://localhost:8000/api/simulation/enable');
+      await axios.post('http://172.20.10.4:8000/api/simulation/enable');
 
       // Start navigation
-      const response = await axios.post('http://localhost:8000/api/navigation/start', {
+      const response = await axios.post('http://172.20.10.4:8000/api/navigation/start', {
         //origin: "16080 Lyndon B Johnson Fwy, Mesquite, TX 75150",
         origin: "2800 Waterview Pkwy, Richardson, Tx 75080",
         destination
@@ -571,7 +571,7 @@ app.post("/startSimulationDirections", async (req, res) => {
 async function updatePosition(lat, lng) {
   try {
     // Update the app's simulated location
-    await axios.post('http://localhost:8000/api/simulation/location', {
+    await axios.post('http://172.20.10.4:8000/api/simulation/location', {
       lat,
       lng,
       accuracy: 10
@@ -723,5 +723,5 @@ app.get("/api/ai-settings/:userId", async (req, res) => {
 });
 
 server.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running on http://172.20.10.4:${port}`);
 });

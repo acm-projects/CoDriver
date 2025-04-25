@@ -51,13 +51,13 @@ export default function HomeScreen() {
       const response = await fetch(url, {
         method: "POST",
         headers: {
-          "xi-api-key": "sk_053a15c8722a862c73ba80150ea64dfc8eb5134947d94a6d", // Replace with secure storage
+          "xi-api-key": "sk_fe8cebb327bd647806f97ed36228c67411a568da7ad749de", // Replace with secure storage
           "Content-Type": "application/json",
           "Accept": "audio/mpeg",
         },
         body: JSON.stringify({
           text,
-          model_id: "eleven_multilingual_v2",
+          model_id: "eleven_flash_v2_5",
           output_format: "mp3_44100_128",
         }),
       });
@@ -105,7 +105,7 @@ export default function HomeScreen() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [destination, setDestination] = useState("");
   const [currentTripId, setCurrentTripId] = useState<string | null>(null);
-  const [ipAddress, setIpAddress] = useState('');
+  const [ipAddress, setIpAddress] = useState('172.20.10.4');
   const [lastUserSpeechTime, setLastUserSpeechTime] = useState<number>(Date.now());
   const [silenceTimer, setSilenceTimer] = useState<NodeJS.Timeout | null>(null);
   const [aiSettings, setAiSettings] = useState<{
@@ -327,18 +327,7 @@ export default function HomeScreen() {
     }
   };
 
-  // Get IP Address for API calls
-  useEffect(() => {
-    const getIpAddress = async () => {
-      try {
-        const ip = await Network.getIpAddressAsync();
-        setIpAddress(ip);
-      } catch (error) {
-        console.error('Failed to get IP address:', error);
-      }
-    };
-    getIpAddress();
-  }, []);
+  
 
   // Navigation function
   const startNavigation = async (dest: string) => {

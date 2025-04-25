@@ -23,21 +23,10 @@ export default function Example() {
   const [drivingSuggestions, setDrivingSuggestions] = useState(false);
   const router = useRouter();
   const { token } = useAuth();
-  const [ipAddress, setIpAddress] = useState('');
+  const [ipAddress, setIpAddress] = useState('172.20.10.4');
   const { email } = useAuth();
 
-  // Get IP Address for API calls
-  useEffect(() => {
-    const getIpAddress = async () => {
-      try {
-        const ip = await Network.getIpAddressAsync();
-        setIpAddress(ip);
-      } catch (error) {
-        console.error('Failed to get IP address:', error);
-      }
-    };
-    getIpAddress();
-  }, []);
+  
 
   // Extract user ID from the JWT token
   const getUserIdFromToken = () => {
@@ -67,8 +56,8 @@ export default function Example() {
 
   const handleSpotifyLogin = async () => {
     try {
-      // Use localhost for development- might need to change to ip address 
-      //const backendUrl = 'http://localhost:8000';
+      // Use 172.20.10.4 for development- might need to change to ip address 
+      //const backendUrl = 'http://172.20.10.4:8000';
 
       // get ip address for production
       const ipAddress = await Network.getIpAddressAsync();
