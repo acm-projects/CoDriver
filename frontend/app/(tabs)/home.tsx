@@ -15,6 +15,7 @@ import { ElevenLabsClient, play } from "elevenlabs";
  import { Audio } from "expo-av";
  import * as FileSystem from "expo-file-system";
  import { Buffer } from 'buffer';
+ import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for the mic icon
 
 // Define interfaces for WebSocket messages
 interface InstructionMessage {
@@ -789,17 +790,15 @@ export default function HomeScreen() {
      </TouchableOpacity>
 
      <TouchableOpacity
-       style={styles.muteButton} // Style for the mute button
-       onPress={toggleMute}
-     >
-       <View style={styles.leftSection3}>
-       </View>
-       <View style={styles.rightSection3}>
-         <Text style={styles.destinationTabText2} numberOfLines={1}>
-           {recognizing ? "Mute" : "Unmute"}
-         </Text>
-       </View>
-     </TouchableOpacity>
+        style={[styles.muteButton, { backgroundColor: recognizing ? 'white' : '#2D2A38' }]}
+        onPress={toggleMute}
+      >
+        <Ionicons
+          name={recognizing ? "mic" : "mic-off"}
+          size={40}
+          color={recognizing ? '#2D2A38' : 'white'}
+        />
+      </TouchableOpacity>
    </View>
  );
 }
