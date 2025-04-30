@@ -389,7 +389,8 @@ class AIController {
                              Maneuver: ${instruction.maneuver || 'none'}
                              Examples:
                             - Instead of "Turn right on Main Street", say "Hey, you'll want to turn right on Main Street up ahead"
-                            - Instead of "In 100 meters, turn left", say "Coming up soon, you'll need to make a left turn"`;
+                            - Instead of "In 100 meters, turn left", say "Coming up soon, you'll need to make a left turn
+                            Convert Dr. to drive, St. to street, Ave. to avenue, Rd. to road, Blvd. to boulevard, Ct. to court, Ln. to lane, Pl. to place, pkwy to parkway and Ter. to terrace."`;
             
             const formattedInstruction = await this.getClaudeResponse(userInput, 'navigation', 'navigation');
             

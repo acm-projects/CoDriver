@@ -16,32 +16,93 @@ import { ElevenLabsClient, play } from "elevenlabs";
  import * as FileSystem from "expo-file-system";
  import { Buffer } from 'buffer';
 
-// Define interfaces for WebSocket messages
-interface InstructionMessage {
-  type: string;
-  data: {
-    instruction?: string;
-    message?: string;
-  };
-}
 
-// Define WebSocket type to address WebSocket errors
-type WebSocketType = WebSocket | null;
 
-export default function HomeScreen() {
-  // Lock to prevent concurrent playback
-  const audioLock = useRef(false);
- 
-  // Enqueue initial navigation message with delay
-  const enqueueInitialNavigation = async (destination: string) => {
-    const initialMessage = `Starting navigation to ${destination}`;
-    await speakResponse(initialMessage);
-    await new Promise((resolve) => setTimeout(resolve, 500));
+ export default function HomeScreen() {
+  
+  const [ipAddress, setIpAddress] = useState('172.20.10.4');
+  // Essential state variables
+  const [transcript, setTranscript] = useState("");
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [hasPermission, setHasPermission] = useState(false);
+  const [recognizing, setRecognizing] = useState(false);
+
+  const toggleMute = () => {
+    if (recognizing) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  }
+
+  // Check permissions and initialize listening
+  useEffect(() => {
+    const initialize = async () => {
+      await checkPermissions();
+      if (hasPermission) {
+        startListening();
+      } else {
+        await requestPermissions();
+        if (hasPermission) startListening();
+      }
+    };
+    initialize();
+  }, []);
+
+  // Permission functions
+  const checkPermissions = async () => {
+    const { status, granted } = await ExpoSpeechRecognitionModule.getPermissionsAsync();
+    console.log("Permissions Status:", status);
+    console.log("Granted:", granted);
+    setHasPermission(granted);
   };
-  const audioQueue = useRef<string[]>([]); // Queue for audio requests
-  const isPlayingRef = useRef(false); // Track if audio is playing
-  // Update the speakWithElevenLabs function to return a Promise
-  // ElevenLabs TTS function with queue support
+
+  const requestPermissions = async () => {
+    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    if (!result.granted) {
+      console.warn("Permissions not granted", result);
+      return;
+    }
+    setHasPermission(true);
+  };
+
+  // Speech recognition event listeners
+  useSpeechRecognitionEvent("start", () => setRecognizing(true));
+  useSpeechRecognitionEvent("end", () => setRecognizing(false));
+  useSpeechRecognitionEvent("result", (event) => {
+    const speechResult = event.results[0]?.transcript || "";
+    setTranscript(speechResult);
+    console.log("Speech to Text Result:", speechResult);
+  });
+  useSpeechRecognitionEvent("error", (event: { error: string; message: string }) => {
+    console.log("Error:", event.error, "Message:", event.message);
+  });
+
+  // Essential listening control functions
+  const startListening = async () => {
+    if (isSpeaking || !hasPermission) return;
+
+    ExpoSpeechRecognitionModule.start({
+      lang: "en-US",
+      interimResults: true,
+      maxAlternatives: 1,
+      continuous: true,
+      requiresOnDeviceRecognition: false,
+      addsPunctuation: false,
+      contextualStrings: [
+        "do you think"
+      ],
+    });
+    setRecognizing(true);
+  };
+
+  const stopListening = () => {
+    ExpoSpeechRecognitionModule.stop();
+    setRecognizing(false);
+  };
+
+  // ElevenLabs TTS function
   const speakWithElevenLabs = async (text: string): Promise<void> => {
     if (!text) return;
     let path = "";
@@ -51,7 +112,7 @@ export default function HomeScreen() {
       const response = await fetch(url, {
         method: "POST",
         headers: {
-          "xi-api-key": "sk_fe8cebb327bd647806f97ed36228c67411a568da7ad749de", // Replace with secure storage
+          "xi-api-key": "sk_fe8cebb327bd647806f97ed36228c67411a568da7ad749de",
           "Content-Type": "application/json",
           "Accept": "audio/mpeg",
         },
@@ -73,20 +134,17 @@ export default function HomeScreen() {
       });
 
       const { sound } = await Audio.Sound.createAsync({ uri: path }, { shouldPlay: true });
-      isPlayingRef.current = true;
 
       await new Promise<void>((resolve) => {
         sound.setOnPlaybackStatusUpdate((status) => {
           if (status.isLoaded && status.didJustFinish) {
             sound.unloadAsync();
-            isPlayingRef.current = false;
             resolve();
           }
         });
       });
     } catch (error) {
       console.error("Error in speakWithElevenLabs:", error);
-      isPlayingRef.current = false;
       throw error;
     } finally {
       if (path) {
@@ -94,474 +152,8 @@ export default function HomeScreen() {
       }
     }
   };
-  
-  const { token } = useAuth();
-  const ws = useRef<WebSocketType>(null);
-  const [recognizing, setRecognizing] = useState(true); // Start with true to unmute
-  const [transcript, setTranscript] = useState("");
-  const [backendResponse, setBackendResponse] = useState("");
-  const [hasPermission, setHasPermission] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [destination, setDestination] = useState("");
-  const [currentTripId, setCurrentTripId] = useState<string | null>(null);
-  const [ipAddress, setIpAddress] = useState('172.20.10.4');
-  const [lastUserSpeechTime, setLastUserSpeechTime] = useState<number>(Date.now());
-  const [silenceTimer, setSilenceTimer] = useState<NodeJS.Timeout | null>(null);
-  const [aiSettings, setAiSettings] = useState<{
-    frequency: number;
-    temperature: number;
-    humorLevel: number;
-  }>({ frequency: 0.5, temperature: 0.8, humorLevel: 0.5 });
 
-
-  const handleInputChange = (text: string) => {
-    setDestination(text); // Update destination state when user types
-  };
-
-  const handleSubmitDestination = async () => {
-    if (destination.trim()) {
-      try {
-        const tripData = await startTrip(destination);
-        startNavigation(destination);
-      } catch (error) {
-        console.error('Error starting trip:', error);
-      }
-    }
-  };
-
-  // WebSocket setup
-  useEffect(() => {
-    if (!ipAddress) return;
-
-    const connectWebSocket = () => {
-      console.log("Attempting to connect to WebSocket at:", `ws://${ipAddress}:8000/`);
-      ws.current = new WebSocket(`ws://${ipAddress}:8000/`);
-
-      ws.current.onopen = () => {
-        console.log("WebSocket connected successfully");
-      };
-
-      ws.current.onmessage = async (event: WebSocketMessageEvent) => {
-        try {
-          console.log("Received WebSocket message:", event.data);
-          const parsedData = JSON.parse(event.data as string) as InstructionMessage;
-          let textToSpeak = "";
-
-          if (parsedData.type === "approachingTurn") {
-            textToSpeak = parsedData.data.instruction || "";
-          } else if (parsedData.type === "complete") {
-            textToSpeak = parsedData.data.message || "You have reached your destination";
-          } else if (parsedData.type === "newHazard") {
-            textToSpeak = parsedData.data.instruction || "There's a hazard detected in your area, please be cautious";
-          } else if (parsedData.type === "instruction") {
-            textToSpeak = parsedData.data.instruction || "";
-          }
-
-          if (textToSpeak && textToSpeak.trim()) {
-            console.log("Preparing to speak:", textToSpeak);
-            stopListening();
-            setBackendResponse(textToSpeak);
-            
-            try {
-              await speakResponse(textToSpeak);
-            } catch (error) {
-              console.error("Error speaking response:", error);
-            }
-          }
-        } catch (error) {
-          console.error("Error processing WebSocket message:", error);
-          setBackendResponse(String(event.data));
-        }
-      };
-
-      ws.current.onerror = (ev: Event) => {
-        console.error("WebSocket Error:", ev);
-        setTimeout(connectWebSocket, 5000);
-      };
-
-      ws.current.onclose = () => {
-        console.log("WebSocket disconnected, attempting to reconnect...");
-        setTimeout(connectWebSocket, 5000);
-      };
-    };
-
-    connectWebSocket();
-
-    return () => {
-      if (ws.current) {
-        console.log("Cleaning up WebSocket connection");
-        ws.current.close();
-      }
-    };
-  }, [ipAddress]);
-
-  // Centralized function to handle speaking
-  // Modified speakResponse function to use ElevenLabs
-  // Modified speakResponse with lock and sequential queue processing
-  const speakResponse = async (text: string) => {
-    if (!text || !text.trim()) return;
-
-    console.log("Adding to speech queue:", text);
-    audioQueue.current.push(text);
-    
-    if (audioLock.current) {
-      console.log("Audio locked, waiting in queue");
-      return;
-    }
-
-    audioLock.current = true;
-
-    try {
-      while (audioQueue.current.length > 0) {
-        const nextText = audioQueue.current[0];
-        if (recognizing) stopListening();
-        setIsSpeaking(true);
-
-        try {
-          console.log("Now speaking:", nextText);
-          await speakWithElevenLabs(nextText);
-          audioQueue.current.shift();
-        } catch (error) {
-          console.error("TTS error:", error);
-          audioQueue.current.shift();
-        } finally {
-          setIsSpeaking(false);
-        }
-
-        // Small delay between messages
-        await new Promise((resolve) => setTimeout(resolve, 300));
-      }
-    } finally {
-      audioLock.current = false;
-      if (audioQueue.current.length === 0) {
-        setTimeout(startListening, 500);
-      }
-    }
-  };
-
-    
-
-  // Check permissions and initialize listening
-  useEffect(() => {
-    const initialize = async () => {
-      await checkPermissions();
-      if (hasPermission) {
-        startListening(); // Start listening immediately if permissions are granted
-      } else {
-        await requestPermissions();
-        if (hasPermission) startListening(); // Start after requesting permissions
-      }
-    };
-    initialize();
-  }, []);
-
-  // Handler for text-to-speech with muting - REMOVED
-  // Since we now handle text-to-speech directly in the WebSocket onmessage handler
-
-  const handleTextToSpeech = () => {
-    const thingToSay = transcript;
-    Speech.speak(thingToSay);
-  };
-
-  const checkPermissions = async () => {
-    const { status, granted } = await ExpoSpeechRecognitionModule.getPermissionsAsync();
-    console.log("Permissions Status:", status);
-    console.log("Granted:", granted);
-    setHasPermission(granted);
-  };
-
-  const requestPermissions = async () => {
-    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-    if (!result.granted) {
-      console.warn("Permissions not granted", result);
-      return;
-    }
-    setHasPermission(true);
-  };
-
-  // Event listeners for speech recognition
-  useSpeechRecognitionEvent("start", () => setRecognizing(true));
-  useSpeechRecognitionEvent("end", () => setRecognizing(false));
-  useSpeechRecognitionEvent("result", (event) => {
-    const speechResult = event.results[0]?.transcript || "";
-    setTranscript(speechResult);
-    console.log("Speech to Text Result:", speechResult);
-  });
-  useSpeechRecognitionEvent("error", (event: { error: string; message: string }) => {
-    console.log("Error:", event.error, "Message:", event.message);
-  });
-
-  const startListening = async () => {
-    if (isSpeaking || !hasPermission) return; // Prevent starting if speaking
-
-    await requestPermissions();
-    if (!hasPermission) return;
-
-    ExpoSpeechRecognitionModule.start({
-      lang: "en-US",
-      interimResults: true,
-      maxAlternatives: 1,
-      continuous: true,
-      requiresOnDeviceRecognition: false,
-      addsPunctuation: false,
-      contextualStrings: [
-        "weather", "temperature", "city", "weather in", "ai", "chat", "conversation",
-        "start navigation", "navigate to", "take me to", "directions to",
-        "how do I get to", "route to", "Start navigation"
-      ],
-    });
-    setRecognizing(true);
-  };
-
-  const stopListening = () => {
-    ExpoSpeechRecognitionModule.stop();
-    setRecognizing(false);
-  };
-
-  const toggleMute = () => {
-    if (recognizing) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  };
-
-  
-
-  // Navigation function
-  const startNavigation = async (dest: string) => {
-    try {
-      setLoading(true);
-
-      console.log("the dest string read as ", dest);
-      const destination = dest || "2831 W 15th St Ste 200, Plano, Tx 75075";
-      console.log(`Starting navigation to: ${destination}`);
-
-      const response = await axios.post(`http://${ipAddress}:8000/startSimulationDirections`, {
-        destination,
-        origin: "2800 Waterview Pkwy, Richardson, Tx 75080"
-      });
-
-      console.log("Navigation started:", response.data);
-      setBackendResponse(`Starting navigation to ${destination}`);
-      await enqueueInitialNavigation(destination);
-    } catch (error) {
-      console.error("Error starting navigation:", error);
-      setBackendResponse("Sorry, there was an error starting navigation.");
-      await speakResponse("Sorry, there was an error starting navigation.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Start a new trip
-  const startTrip = async (destination: string) => {
-    if (!token || !ipAddress) {
-      console.error('No authentication token or IP address found');
-      return;
-    }
-
-    try {
-      const response = await axios.post(`http://${ipAddress}:8000/api/history/start-trip`, 
-        { destination },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-
-      if (response.data.tripId) {
-        setCurrentTripId(response.data.tripId);
-        return response.data;
-      }
-    } catch (error) {
-      console.error('Error starting trip:', error);
-      throw error;
-    }
-  };
-
-  // Add conversation to current trip
-  const addConversation = async (userMessage: string, aiResponse: string) => {
-    if (!token || !currentTripId || !ipAddress) {
-      console.log('Missing required data for adding conversation:', {
-        hasToken: !!token,
-        hasTripId: !!currentTripId,
-        hasIpAddress: !!ipAddress
-      });
-      return;
-    }
-
-    // Ensure we have valid strings for both messages
-    const validUserMessage = userMessage?.trim() || "User initiated navigation";
-    const validAiResponse = aiResponse?.trim() || "Navigation started";
-
-    try {
-      await axios.post(`http://${ipAddress}:8000/api/history/trip/${currentTripId}/conversations`,
-        {
-          userMessage: validUserMessage,
-          aiResponse: validAiResponse
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-    } catch (error) {
-      console.error('Error adding conversation:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('Response data:', error.response?.data);
-        console.error('Status:', error.response?.status);
-      }
-    }
-  };
-
-  // End current trip
-  const endTrip = async () => {
-    if (!token || !currentTripId || !ipAddress) {
-      console.error('Missing required data for ending trip');
-      return;
-    }
-
-    try {
-      await axios.post(`http://${ipAddress}:8000/api/history/trip/${currentTripId}/end`,
-        {},  // empty body
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          }
-        }
-      );
-      setCurrentTripId(null);
-    } catch (error) {
-      console.error('Error ending trip:', error);
-    }
-  };
-
-  // Extract destination from user speech
-  const extractDestination = (transcript: string): string | null => {
-    console.log('Processing transcript:', transcript); // Debug log
-  
-    const navigationKeywords = [
-      "start navigation", "navigate to", "take me to", "directions to",
-      "how do I get to", "route to"
-    ];
-  
-    for (const keyword of navigationKeywords) {
-      if (transcript.toLowerCase().includes(keyword)) {
-        const afterKeyword = transcript.toLowerCase().split(keyword)[1]?.trim();
-        console.log('Found keyword:', keyword, 'Extracted:', afterKeyword); // Debug log
-        if (afterKeyword) {
-          return afterKeyword;
-        }
-      }
-    }
-    return null;
-  };
-
-  // Create a separate function to check for end trip commands
-  const isEndTripCommand = (text: string): boolean => {
-    const endTripKeywords = [
-      "end trip",
-      "stop navigation",
-      "end navigation",
-      "stop trip",
-      "cancel trip",
-      "cancel navigation",
-      "finish trip",
-      "finish navigation",
-      "end journey",
-      "stop journey",
-      "we're here",
-      "we have arrived",
-      "i've arrived",
-      "i have arrived",
-      "that's all",
-      "we're done",
-      "i'm done",
-      "end route",
-      "stop route"
-    ];
-
-    return endTripKeywords.some(keyword => 
-      text.toLowerCase().includes(keyword.toLowerCase())
-    );
-  };
-
-  // Modified sendSpeechToBackend to handle trip-related commands
-  const sendSpeechToBackend = async () => {
-    if (!transcript || isSpeaking) return;
-
-    try {
-      setLoading(true);
-
-      
-      // Check if this is a navigation request
-      const extractedDestination = extractDestination(transcript);
-      console.log('Extracted destination:', extractedDestination);
-      
-      if (extractedDestination) {
-        console.log('Attempting to start trip to:', extractedDestination);
-        try {
-          const tripData = await startTrip(extractedDestination);
-          console.log('Trip started successfully:', tripData);
-          // Call startNavigation after successfully starting the trip
-          //await startNavigation("2831 W 15th St Ste 200, Plano, Tx 75075");
-          await startNavigation(extractedDestination);
-        } catch (tripError) {
-          console.error('Failed to start trip:', tripError);
-          setBackendResponse("Sorry, I couldn't start the trip. Please try again.");
-          speakResponse("Sorry, I couldn't start the trip. Please try again.");
-        }
-      } else if (isEndTripCommand(transcript)) {
-        if (!currentTripId) {
-          setBackendResponse("There is no active trip to end.");
-          speakResponse("There is no active trip to end.");
-          return;
-        }
-        await endTrip();
-        setBackendResponse("Trip ended successfully");
-        speakResponse("Trip ended successfully");
-      } else {
-        // Regular conversation
-        console.log("the transcript read as from the /command endpoint");
-        const response = await axios.post(`http://${ipAddress}:8000/command`, {
-          userInput: transcript,
-          sessionId: "unique-session-id",
-        });
-        
-        const responseText = response.data.response || "No response received";
-        setBackendResponse(responseText);
-        
-        // Store the conversation if we're in an active trip
-        if (currentTripId) {
-          await addConversation(transcript, responseText);
-        }
-        
-        speakResponse(responseText);
-      }
-    } catch (error) {
-      console.error("Error processing speech:", error);
-      if (axios.isAxiosError(error)) {
-        console.error('Full error details:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-          headers: error.response?.headers
-        });
-      }
-      setBackendResponse("Sorry, there was an error processing your request.");
-      speakResponse("Sorry, there was an error processing your request.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Debounced transcript processing
+  // Process transcript with debounce
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       if (transcript && !isSpeaking) sendSpeechToBackend();
@@ -570,126 +162,32 @@ export default function HomeScreen() {
     return () => clearTimeout(debounceTimer);
   }, [transcript]);
 
-  // Fetch AI settings when component mounts
-  useEffect(() => {
-    const fetchAiSettings = async () => {
-      if (!token) return;
-      try {
-        const response = await axios.get(`http://${ipAddress}:8000/api/ai-settings/${getUserIdFromToken()}`);
-        setAiSettings(response.data);
-      } catch (error) {
-        console.error('Error fetching AI settings:', error);
-      }
-    };
-    fetchAiSettings();
-  }, [token]);
+  // The main function you requested
+  const sendSpeechToBackend = async () => {
+    if (!transcript || isSpeaking) return;
 
-  // Function to get user ID from token
-  const getUserIdFromToken = () => {
-    if (!token) return null;
     try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      return JSON.parse(jsonPayload).id;
-    } catch (error) {
-      console.error('Error decoding token:', error);
-      return null;
-    }
-  };
+      setLoading(true);
 
-  // Update last speech time when user speaks
-  useEffect(() => {
-    if (transcript) {
-      setLastUserSpeechTime(Date.now());
-    }
-  }, [transcript]);
-
-  // Handle silence and frequency-based conversation initiation
-  useEffect(() => {
-    // Don't start any timers if muted
-    if (!recognizing) {
-      if (silenceTimer) {
-        clearTimeout(silenceTimer);
-        setSilenceTimer(null);
-      }
-      return;
-    }
-
-    // Don't initiate if currently speaking
-    if (isSpeaking) return;
-
-    // Clear any existing timer
-    if (silenceTimer) {
-      clearTimeout(silenceTimer);
-    }
-
-    // Calculate silence duration based on frequency setting
-    const getSilenceDuration = () => {
-      // Convert frequency (0-1) to silence duration in milliseconds
-      // Lower frequency = longer silence duration
-      const minDuration = 30000; // 30 seconds minimum
-      const maxDuration = 600000; // 10 minutes maximum
-
-      // Invert the frequency (1 - frequency) to make lower values result in longer durations
-      
-      return minDuration + ((1 - aiSettings.frequency) * (maxDuration - minDuration));
-      
-    };
-
-    const duration = getSilenceDuration();
-    const timeSinceLastSpeech = Date.now() - lastUserSpeechTime;
-
-    if (timeSinceLastSpeech >= duration) {
-      // Time to initiate conversation
-      initiateConversation();
-    } else {
-      // Set timer for next check
-      const timer = setTimeout(() => {
-        // Double check we're still not muted before initiating
-        if (recognizing && !isSpeaking) {
-          const newTimeSinceLastSpeech = Date.now() - lastUserSpeechTime;
-          if (newTimeSinceLastSpeech >= duration) {
-            initiateConversation();
-          }
+      if (transcript.toLowerCase().trim().includes("do you think")) {
+        const positiveMessage = "MAKE CO. DRIVER YOUR COMPANION DRIVER !!!!";
+        stopListening();
+        setIsSpeaking(true);
+        await speakWithElevenLabs(positiveMessage);
+        setIsSpeaking(false);
+        if (!isSpeaking) {
+          startListening();
         }
-      }, duration - timeSinceLastSpeech);
-      setSilenceTimer(timer);
-    }
-
-    return () => {
-      if (silenceTimer) {
-        clearTimeout(silenceTimer);
-      }
-    };
-  }, [recognizing, isSpeaking, lastUserSpeechTime, aiSettings.frequency]);
-
-  // Function to initiate conversation
-  const initiateConversation = async () => {
-    // Double check we're not muted before initiating
-    if (!recognizing || isSpeaking) return;
-
-    try {
-      const response = await axios.post(`http://${ipAddress}:8000/command`, {
-        userInput: "initiate_conversation",
-        sessionId: "auto-initiated"
-      });
-      
-      const responseText = response.data.response || "No response received";
-      setBackendResponse(responseText);
-      
-      if (currentTripId) {
-        await addConversation("", responseText);
+        
+        return;
       }
       
-      speakResponse(responseText);
+      // Additional speech handling would go here...
       
-      // Reset the last speech time to prevent immediate re-initiation
-      setLastUserSpeechTime(Date.now());
     } catch (error) {
-      console.error("Error initiating conversation:", error);
+      console.error("Error processing speech:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -763,7 +261,7 @@ export default function HomeScreen() {
      </View>
 
      {/* Destination Button at the bottom */}
-     <TouchableOpacity style={styles.destinationButton} onPress={handleSubmitDestination}>
+     <TouchableOpacity style={styles.destinationButton}>
        {/* Left Section: Icon */}
        <View style={styles.leftSection2}>
          <Image
@@ -778,8 +276,8 @@ export default function HomeScreen() {
            style={styles.destinationInput}
            placeholder="Where are you heading?"
            placeholderTextColor="#AE9A8C"
-           value={destination}
-           onChangeText={handleInputChange} // Update state on text change
+           //value={destination}
+           //onChangeText={handleInputChange} // Update state on text change
          />
          <Image
            source={require('../../assets/images/Voice 2.png')}

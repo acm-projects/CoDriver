@@ -55,12 +55,14 @@ export default function Example() {
   };
 
   const handleSpotifyLogin = async () => {
+    
+
     try {
       // Use 172.20.10.4 for development- might need to change to ip address 
       //const backendUrl = 'http://172.20.10.4:8000';
 
       // get ip address for production
-      const ipAddress = await Network.getIpAddressAsync();
+      
       const backendUrl = `http://${ipAddress}:8000`;
 
       // Get the login URL from the backend
