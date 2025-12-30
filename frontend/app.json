@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "frontend",
+    "slug": "frontend",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon2.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/icon2.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1E1E1E"
+    },
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.myapp.frontend",
+      "buildNumber": "1.0.0"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.myapp.frontend",
+      "versionCode": 1
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#1E1E1E",
+          "image": "./assets/images/icon2.png",
+          "imageWidth": 200,
+          "resizeMode": "contain"
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to use the microphone.",
+          "speechRecognitionPermission": "Allow $(PRODUCT_NAME) to use speech recognition.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "devClient": true,
+     "entryPoint": "./app/tabs/index.tsx"
+  }
+}
